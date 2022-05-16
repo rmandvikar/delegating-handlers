@@ -15,5 +15,9 @@
     <Authors>hippy</Authors>
     <Company>hippy</Company>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="rm.FeatureToggle" Version="1.1.2" />
+    <PackageReference Include="rm.Random2" Version="2.1.2" />
+  </ItemGroup>
 
 </Project>
