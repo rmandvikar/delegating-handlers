@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <LangVersion>10.0</LangVersion>
     <RootNamespace>rm.DelegatingHandlers</RootNamespace>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
@@ -16,6 +17,7 @@
     <Company>hippy</Company>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="IsExternalInit" Version="1.0.2" />
     <PackageReference Include="rm.FeatureToggle" Version="1.1.2" />
     <PackageReference Include="rm.Random2" Version="2.1.2" />
   </ItemGroup>
