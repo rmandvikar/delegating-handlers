@@ -1,6 +1,8 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
+using Moq;
 using NUnit.Framework;
+using rm.Clock;
 using rm.DelegatingHandlers;
 
 namespace rm.DelegatingHandlersTest;
@@ -30,12 +32,15 @@ public class ScenarioTests
 			{
 				TimeoutInMilliseconds = 10,
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, timeoutHandler, delegateHandler, procrastinatingHandler);
@@ -75,12 +80,15 @@ public class ScenarioTests
 			{
 				TimeoutInMilliseconds = 10,
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var httpClient = HttpClientFactory.Create(
 			retryHandler, timeoutHandler, delegateHandler, procrastinatingHandler);
@@ -126,12 +134,15 @@ public class ScenarioTests
 			{
 				TimeoutInMilliseconds = 10_000,
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var httpClient = HttpClientFactory.Create(
 			retryHandler, timeoutHandler, delegateHandler, procrastinatingHandler);
