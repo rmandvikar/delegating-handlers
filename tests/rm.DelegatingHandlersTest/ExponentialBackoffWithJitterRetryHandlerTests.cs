@@ -1,7 +1,10 @@
 ﻿using System.Net;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using Moq;
 using NUnit.Framework;
+using Polly.Contrib.WaitAndRetry;
+using rm.Clock;
 using rm.DelegatingHandlers;
 
 namespace rm.DelegatingHandlersTest;
@@ -9,23 +12,28 @@ namespace rm.DelegatingHandlersTest;
 [TestFixture]
 public class ExponentialBackoffWithJitterRetryHandlerTests
 {
-	private static Exception[] handledExceptions =
+	private static readonly Exception[] handledExceptions =
 		{
 			new HttpRequestException(),
 			new TimeoutExpiredException(),
 		};
 
 	[Test]
-	public async Task Retries_On_5xx()
+	[TestCase(500)]
+	[TestCase(501)]
+	[TestCase(502)]
+	[TestCase(503)]
+	[TestCase(504)]
+	[TestCase(542)]
+	public async Task Retries_On_5xx(int statusCode)
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-		var statusCode = (HttpStatusCode)542;
 		var content = fixture.Create<string>();
 		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
 			new ShortCircuitingResponseHandlerSettings
 			{
-				StatusCode = statusCode,
+				StatusCode = (HttpStatusCode)statusCode,
 				Content = content,
 			});
 		var retryAttempt = -1;
@@ -35,12 +43,15 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 				retryAttempt++;
 				return Task.CompletedTask;
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, delegateHandler, shortCircuitingResponseHandler);
@@ -65,12 +76,15 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 				retryAttempt++;
 				return Task.CompletedTask;
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, delegateHandler, throwingHandler);
@@ -85,7 +99,52 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 	}
 
 	[Test]
-	public void Does_Not_Retries_On_TaskCanceledException()
+	[TestCase(400)]
+	[TestCase(401)]
+	[TestCase(402)]
+	[TestCase(403)]
+	[TestCase(404)]
+	[TestCase(420)] // calm down
+	[TestCase(442)]
+	public async Task Does_Not_Retry_On_4xx(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 0,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(0, retryAttempt);
+	}
+
+	[Test]
+	public void Does_Not_Retry_On_TaskCanceledException()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
@@ -97,12 +156,15 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 				retryAttempt++;
 				return Task.CompletedTask;
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 1,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, delegateHandler, throwingHandler);
@@ -129,12 +191,14 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 				StatusCode = statusCode,
 				Content = content,
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = 0,
 				RetryDelayInMilliseconds = 0,
-			});
+			}, clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, shortCircuitingResponseHandler);
@@ -162,12 +226,15 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 				StatusCode = statusCode,
 				Content = content,
 			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
 			new RetrySettings
 			{
 				RetryCount = retryCount,
 				RetryDelayInMilliseconds = 0,
-			});
+			},
+			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			retryHandler, shortCircuitingResponseHandler);
@@ -178,5 +245,326 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 #pragma warning disable CS0618 // Type or member is obsolete
 		Assert.AreEqual(retryCount, requestMessage.Properties[RequestProperties.PollyRetryAttempt]);
 #pragma warning restore CS0618 // Type or member is obsolete
+	}
+
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	public async Task Retries_When_RetryAfter_Date_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var date = DateTimeOffsetValues.Chernobyl.AddSeconds(0);
+		var retryAfterDateHandler = new RetryAfterDateHandler(date);
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 0,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDateHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(1, retryAttempt);
+	}
+
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	public async Task Retries_When_RetryAfter_Delay_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var delayInSeconds = 0;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 0,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDelayHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(1, retryAttempt);
+	}
+
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	public async Task Does_Not_Retry_Retries_When_RetryAfter_Date_Header_High(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var date = DateTimeOffsetValues.Chernobyl.AddSeconds(5);
+		var retryAfterDateHandler = new RetryAfterDateHandler(date);
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 0,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDateHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(0, retryAttempt);
+	}
+
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	public async Task Does_Not_Retry_Retries_When_RetryAfter_Delay_Header_High(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var delayInSeconds = 5;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 0,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDelayHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(0, retryAttempt);
+	}
+
+	[Explicit]
+	[Test]
+	public void Print_SleepDurations()
+	{
+		var retryDelayInMilliseconds = 500;
+		var retryCount = 5;
+		var sleepDurationsWithJitter = Backoff.DecorrelatedJitterBackoffV2(
+			medianFirstRetryDelay: TimeSpan.FromMilliseconds(retryDelayInMilliseconds),
+			retryCount: retryCount);
+
+		Console.WriteLine($"retryCount: {retryCount}");
+		foreach (var sleepDurationWithJitter in sleepDurationsWithJitter)
+		{
+			Console.WriteLine(sleepDurationWithJitter);
+		}
+	}
+
+	[Explicit]
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	[TestCase(500)] // DNC for retry-after
+	public async Task Showcase_Retries_With_RetryAfter_Delay_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var delayInSeconds = 1;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		var retryAttempt = -1;
+		var tsPrevious = default(TimeSpan);
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				var tsCurrent = DateTime.Now.TimeOfDay;
+				var delta = (tsCurrent - (tsPrevious != default ? tsPrevious : tsCurrent)).TotalMilliseconds;
+				tsPrevious = tsCurrent;
+				retryAttempt++;
+				Console.WriteLine($"[{tsCurrent.ToString(@"hh\:mm\:ss\.fff")}] making attempt: {retryAttempt}, delta: {delta,7:F0}");
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 3,
+				RetryDelayInMilliseconds = 500,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDelayHandler, shortCircuitingResponseHandler);
+
+		Console.WriteLine($"retry-after: {delayInSeconds}");
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] starting");
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] ending");
+		Console.WriteLine($"retry-attempt: {retryAttempt}");
+	}
+
+	[Explicit]
+	[Repeat(1_000)]
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	public async Task Perf_Retries_When_RetryAfter_Delay_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var delayInSeconds = 0;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 10,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retryAfterDelayHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(1, retryAttempt);
+	}
+
+	[Explicit]
+	[Repeat(1_000)]
+	[Test]
+	[TestCase(503)]
+	public async Task Perf_Retries_When_No_RetryAfter_Delay_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = (HttpStatusCode)statusCode,
+				Content = content,
+			});
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
+		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
+		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+			new RetrySettings
+			{
+				RetryCount = 1,
+				RetryDelayInMilliseconds = 10,
+			},
+			clockMock.Object);
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, shortCircuitingResponseHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+
+		Assert.AreEqual(1, retryAttempt);
 	}
 }
