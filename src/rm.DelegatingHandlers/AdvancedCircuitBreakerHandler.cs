@@ -12,7 +12,7 @@ namespace rm.DelegatingHandlers
 	/// <para></para>
 	/// Circuit breaker conditions:
 	///   TaskCanceledException, 429,
-	///   HttpRequestException, 5xx
+	///   HttpRequestException, 5xx, TimeoutExpiredException
 	/// </summary>
 	/// <remarks>
 	/// Uses polly's AdvancedCircuitBreaker.
@@ -52,6 +52,7 @@ namespace rm.DelegatingHandlers
 				//   for retry on 429, honor "retry-after" header.
 				.Handle<TaskCanceledException>()
 				.Or<HttpRequestException>()
+				.Or<TimeoutExpiredException>()
 				.OrResult<HttpResponseMessage>(response =>
 					// 5xx, 429 too many requests
 					response.Is5xx()

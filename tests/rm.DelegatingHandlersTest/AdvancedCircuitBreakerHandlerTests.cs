@@ -20,9 +20,10 @@ namespace rm.DelegatingHandlersTest
 			{
 				new TaskCanceledException(),
 				new HttpRequestException(),
+				new TimeoutExpiredException(),
 			};
 		private readonly Func<Exception, bool> handledExceptionsPredicate = (ex) =>
-			ex is TaskCanceledException || ex is HttpRequestException;
+			ex is TaskCanceledException || ex is HttpRequestException || ex is TimeoutExpiredException;
 
 		[Test]
 		[TestCaseSource(nameof(handledStatusCodes))]
