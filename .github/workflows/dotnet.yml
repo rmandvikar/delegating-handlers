@@ -22,5 +22,5 @@ jobs:
         dotnet test tests/rm.DelegatingHandlersTest/rm.DelegatingHandlersTest.csproj \
           -c Release --no-build --no-restore \
           -f net6.0 \
-          -v normal \
+          -l:"console;verbosity=normal" \
           --filter "TestCategory!=very.slow"
