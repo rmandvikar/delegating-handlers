@@ -35,6 +35,7 @@ namespace rm.DelegatingHandlers
 			// ref: https://github.com/dotnet/runtime/issues/19925#issuecomment-272664671
 			retryPolicy = Policy
 				.Handle<HttpRequestException>()
+				.Or<TimeoutExpiredException>()
 				.OrResult<HttpResponseMessage>(response => response.Is5xx())
 				.WaitAndRetryAsync(
 					sleepDurations: sleepDurationsWithJitter,

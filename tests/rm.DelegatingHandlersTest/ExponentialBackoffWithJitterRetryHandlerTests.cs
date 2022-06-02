@@ -9,6 +9,12 @@ namespace rm.DelegatingHandlersTest
 	[TestFixture]
 	public class ExponentialBackoffWithJitterRetryHandlerTests
 	{
+		private static Exception[] handledExceptions =
+			{
+				new HttpRequestException(),
+				new TimeoutExpiredException(),
+			};
+
 		[Test]
 		public async Task Retries_On_5xx()
 		{
@@ -46,11 +52,12 @@ namespace rm.DelegatingHandlersTest
 		}
 
 		[Test]
-		public void Retries_On_HttpRequestException()
+		[TestCaseSource(nameof(handledExceptions))]
+		public void Retries_On_Exceptions(Exception handledException)
 		{
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var throwingHandler = new ThrowingHandler(new HttpRequestException());
+			var throwingHandler = new ThrowingHandler(handledException);
 			var retryAttempt = -1;
 			var delegateHandler = new DelegateHandler(
 				(request, ct) =>
@@ -69,7 +76,7 @@ namespace rm.DelegatingHandlersTest
 				retryHandler, delegateHandler, throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			Assert.ThrowsAsync<HttpRequestException>(async () =>
+			Assert.ThrowsAsync(Is.TypeOf(handledException.GetType()), async () =>
 			{
 				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 			});
