@@ -78,6 +78,38 @@ namespace rm.DelegatingHandlersTest
 		}
 
 		[Test]
+		public void Retries_On_TimeoutExpiredException()
+		{
+			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+			var throwingHandler = new ThrowingHandler(new TimeoutExpiredException());
+			var retryAttempt = -1;
+			var delegateHandler = new DelegateHandler(
+				(request, ct) =>
+				{
+					retryAttempt++;
+					return Task.CompletedTask;
+				});
+			var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
+				new RetrySettings
+				{
+					RetryCount = 1,
+					RetryDelayInMilliseconds = 0,
+				});
+
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), retryHandler, delegateHandler, throwingHandler);
+
+			using var requestMessage = fixture.Create<HttpRequestMessage>();
+			Assert.ThrowsAsync<TimeoutExpiredException>(async () =>
+			{
+				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+			});
+
+			Assert.AreEqual(1, retryAttempt);
+		}
+
+		[Test]
 		public void Does_Not_Retries_On_TaskCanceledException()
 		{
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());

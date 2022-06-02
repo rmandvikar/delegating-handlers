@@ -51,6 +51,7 @@ namespace rm.DelegatingHandlers
 				//   for retry on 429, honor "retry-after" header.
 				.Handle<TaskCanceledException>()
 				.Or<HttpRequestException>()
+				.Or<TimeoutExpiredException>()
 				.OrResult<HttpResponseMessage>(response =>
 					// 5xx, 429 too many requests
 					response.Is5xx()
