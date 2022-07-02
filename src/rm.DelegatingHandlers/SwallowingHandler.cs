@@ -1,4 +1,9 @@
-﻿namespace rm.DelegatingHandlersTest
+﻿using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace rm.DelegatingHandlers
 {
 	public class SwallowingHandler : DelegatingHandler
 	{
@@ -20,14 +25,10 @@
 				return await base.SendAsync(request, cancellationToken)
 					.ConfigureAwait(false);
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (predicate(ex))
 			{
 				// swallow
-				if (predicate(ex))
-				{
-					return null!;
-				}
-				throw;
+				return null!;
 			}
 		}
 	}
