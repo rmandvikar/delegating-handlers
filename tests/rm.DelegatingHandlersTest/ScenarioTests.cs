@@ -142,5 +142,29 @@ namespace rm.DelegatingHandlersTest
 			});
 			Assert.AreEqual(0, retryAttempt);
 		}
+
+		[Test]
+		public void Cause_Fault_Window()
+		{
+			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
+			var faultWindowSignalingHandler = new FaultWindowSignalingHandler(
+				new FaultWindowSignalingHandlerSettings
+				{
+					ProbabilityPercentage = 100d,
+					FaultDuration = TimeSpan.FromMilliseconds(10),
+					SignalProperty = typeof(ThrowingOnConditionHandler).FullName
+				});
+
+			using var invoker = HttpMessageInvokerFactory.Create(
+				faultWindowSignalingHandler, throwingOnConditionHandler);
+
+			using var requestMessage = fixture.Create<HttpRequestMessage>();
+			Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
+			{
+				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+			});
+		}
 	}
 }
