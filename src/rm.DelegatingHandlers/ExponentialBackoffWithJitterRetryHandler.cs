@@ -47,7 +47,7 @@ namespace rm.DelegatingHandlers
 					});
 		}
 
-		protected async override Task<HttpResponseMessage> SendAsync(
+		protected override async Task<HttpResponseMessage> SendAsync(
 			HttpRequestMessage request,
 			CancellationToken cancellationToken)
 		{
