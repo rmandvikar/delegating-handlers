@@ -1,8 +1,7 @@
 ﻿namespace rm.DelegatingHandlers
 {
-	public static class ResponseHeaders
+	public static class RequestHeaders
 	{
 		public const string CorrelationId = "x-correlation-id";
-		public const string RetryAfter = "retry-after";
 	}
 }
