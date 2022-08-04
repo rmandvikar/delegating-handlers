@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
+using rm.DelegatingHandlers;
 
 namespace rm.DelegatingHandlersTest
 {

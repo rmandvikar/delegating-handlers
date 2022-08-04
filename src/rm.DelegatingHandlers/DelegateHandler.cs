@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlers
 {
 	/// <summary>
 	/// Runs delegates.
