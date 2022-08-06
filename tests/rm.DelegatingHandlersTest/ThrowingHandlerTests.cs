@@ -14,9 +14,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingHandler = new ThrowingHandler(new TurnDownForWhatException());
-			throwingHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>

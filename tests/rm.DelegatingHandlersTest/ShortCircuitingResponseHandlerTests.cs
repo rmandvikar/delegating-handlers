@@ -22,9 +22,9 @@ namespace rm.DelegatingHandlersTest
 					StatusCode = statusCode,
 					Content = content,
 				});
-			shortCircuitingResponseHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(shortCircuitingResponseHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);

@@ -20,9 +20,9 @@ namespace rm.DelegatingHandlersTest
 				{
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -50,9 +50,9 @@ namespace rm.DelegatingHandlersTest
 				{
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			if (isValuePresent)
@@ -81,9 +81,9 @@ namespace rm.DelegatingHandlersTest
 				{
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete

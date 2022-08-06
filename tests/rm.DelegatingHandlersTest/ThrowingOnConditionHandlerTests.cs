@@ -14,9 +14,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
-			throwingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -37,9 +37,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
-			throwingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			if (isValuePresent)
@@ -61,9 +61,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
-			throwingOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete

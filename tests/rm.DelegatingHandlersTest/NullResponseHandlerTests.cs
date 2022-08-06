@@ -14,9 +14,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var nullResponseHandler = new NullResponseHandler();
-			nullResponseHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(nullResponseHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), nullResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);

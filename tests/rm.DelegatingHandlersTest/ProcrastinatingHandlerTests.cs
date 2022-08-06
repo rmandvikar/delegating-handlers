@@ -20,9 +20,9 @@ namespace rm.DelegatingHandlersTest
 				{
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var stopwatch = Stopwatch.StartNew();

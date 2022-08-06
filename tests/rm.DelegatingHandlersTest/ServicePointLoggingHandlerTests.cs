@@ -20,9 +20,9 @@ namespace rm.DelegatingHandlersTest
 			loggerMock.Setup(x => x.ForContext(It.IsAny<Type>())).Returns(loggerMock.Object);
 			loggerMock.Setup(x => x.ForContext(It.IsAny<IEnumerable<ILogEventEnricher>>())).Returns(loggerMock.Object);
 			var servicePointLoggingHandler = new ServicePointLoggingHandler(loggerMock.Object);
-			servicePointLoggingHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(servicePointLoggingHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), servicePointLoggingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);

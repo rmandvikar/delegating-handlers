@@ -15,9 +15,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var relayHandler = new RelayHandler();
-			relayHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(relayHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), relayHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);

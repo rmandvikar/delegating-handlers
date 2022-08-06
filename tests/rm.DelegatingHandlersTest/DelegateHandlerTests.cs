@@ -20,9 +20,9 @@ namespace rm.DelegatingHandlersTest
 					i++;
 					return Task.CompletedTask;
 				});
-			delegateHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(delegateHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), delegateHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -42,9 +42,9 @@ namespace rm.DelegatingHandlersTest
 					i++;
 					return Task.CompletedTask;
 				});
-			delegateHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(delegateHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), delegateHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);

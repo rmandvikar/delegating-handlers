@@ -14,9 +14,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException());
-			throwingWithProbabilityHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingWithProbabilityHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
@@ -31,9 +31,9 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(0d, new TurnDownForWhatException());
-			throwingWithProbabilityHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(throwingWithProbabilityHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			Assert.DoesNotThrowAsync(async () =>

@@ -22,12 +22,11 @@ namespace rm.DelegatingHandlersTest
 				StatusCode = (HttpStatusCode)statusCode,
 			};
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
-			shortCircuitingCannedResponseHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 			var delayInSeconds = 42;
 			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
-			retryAfterDelayHandler.InnerHandler = shortCircuitingCannedResponseHandler;
 
-			using var invoker = new HttpMessageInvoker(retryAfterDelayHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -46,12 +45,11 @@ namespace rm.DelegatingHandlersTest
 				StatusCode = (HttpStatusCode)statusCode,
 			};
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
-			shortCircuitingCannedResponseHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 			var delayInSeconds = 42;
 			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
-			retryAfterDelayHandler.InnerHandler = shortCircuitingCannedResponseHandler;
 
-			using var invoker = new HttpMessageInvoker(retryAfterDelayHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
