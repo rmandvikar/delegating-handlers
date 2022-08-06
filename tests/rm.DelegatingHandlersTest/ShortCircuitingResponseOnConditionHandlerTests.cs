@@ -22,9 +22,9 @@ namespace rm.DelegatingHandlersTest
 					StatusCode = statusCode,
 					Content = content,
 				});
-			shortCircuitingResponseOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(shortCircuitingResponseOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -53,9 +53,9 @@ namespace rm.DelegatingHandlersTest
 					StatusCode = statusCode,
 					Content = content,
 				});
-			shortCircuitingResponseOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(shortCircuitingResponseOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			if (isValuePresent)
@@ -84,9 +84,9 @@ namespace rm.DelegatingHandlersTest
 					StatusCode = statusCode,
 					Content = content,
 				});
-			shortCircuitingResponseOnConditionHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(shortCircuitingResponseOnConditionHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete

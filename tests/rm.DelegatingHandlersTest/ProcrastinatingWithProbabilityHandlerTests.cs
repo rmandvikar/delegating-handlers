@@ -21,9 +21,9 @@ namespace rm.DelegatingHandlersTest
 					ProbabilityPercentage = 100d,
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingWithProbabilityHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingWithProbabilityHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var stopwatch = Stopwatch.StartNew();
@@ -46,9 +46,9 @@ namespace rm.DelegatingHandlersTest
 					ProbabilityPercentage = 0d,
 					DelayInMilliseconds = delayInMilliseconds,
 				});
-			procrastinatingWithProbabilityHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(procrastinatingWithProbabilityHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), procrastinatingWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var stopwatch = Stopwatch.StartNew();

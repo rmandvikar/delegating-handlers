@@ -15,9 +15,9 @@ namespace rm.DelegatingHandlersTest
 
 			var cannedResponse = fixture.Create<HttpResponseMessage>();
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
-			shortCircuitingCannedResponseHandler.InnerHandler = fixture.Create<HttpMessageHandler>();
 
-			using var invoker = new HttpMessageInvoker(shortCircuitingCannedResponseHandler);
+			using var invoker = HttpMessageInvokerFactory.Create(
+				fixture.Create<HttpMessageHandler>(), shortCircuitingCannedResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
