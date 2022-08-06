@@ -43,7 +43,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryHandler, delegateHandler, shortCircuitingResponseHandler);
+				retryHandler, delegateHandler, shortCircuitingResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -105,7 +105,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryHandler, delegateHandler, throwingHandler);
+				retryHandler, delegateHandler, throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			Assert.ThrowsAsync<TaskCanceledException>(async () =>
@@ -137,7 +137,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryHandler, shortCircuitingResponseHandler);
+				retryHandler, shortCircuitingResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);

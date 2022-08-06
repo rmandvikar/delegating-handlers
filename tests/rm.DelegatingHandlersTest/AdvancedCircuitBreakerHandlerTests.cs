@@ -48,7 +48,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), circuitBreaker, shortCircuitingResponseHandler);
+				circuitBreaker, shortCircuitingResponseHandler);
 
 			Assert.ThrowsAsync<BrokenCircuitException<HttpResponseMessage>>(async () =>
 			{
@@ -78,7 +78,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), swallowingHandler, circuitBreaker, throwingHandler);
+				swallowingHandler, circuitBreaker, throwingHandler);
 
 			Assert.ThrowsAsync<BrokenCircuitException>(async () =>
 			{

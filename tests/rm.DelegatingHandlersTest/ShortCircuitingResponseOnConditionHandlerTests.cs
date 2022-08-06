@@ -24,7 +24,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseOnConditionHandler);
+				shortCircuitingResponseOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -86,7 +86,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseOnConditionHandler);
+				shortCircuitingResponseOnConditionHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete

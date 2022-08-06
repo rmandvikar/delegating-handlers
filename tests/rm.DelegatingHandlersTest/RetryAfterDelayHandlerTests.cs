@@ -26,7 +26,7 @@ namespace rm.DelegatingHandlersTest
 			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
+				retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -49,7 +49,7 @@ namespace rm.DelegatingHandlersTest
 			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
+				retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
