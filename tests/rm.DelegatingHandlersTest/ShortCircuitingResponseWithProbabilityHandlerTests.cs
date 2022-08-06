@@ -25,7 +25,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), shortCircuitingResponseWithProbabilityHandler);
+				shortCircuitingResponseWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);

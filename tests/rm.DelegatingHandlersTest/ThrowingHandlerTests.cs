@@ -16,7 +16,7 @@ namespace rm.DelegatingHandlersTest
 			var throwingHandler = new ThrowingHandler(new TurnDownForWhatException());
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingHandler);
+				throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>

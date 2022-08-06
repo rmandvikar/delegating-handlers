@@ -93,7 +93,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryHandler, retrySignalingOnConditionHandler, shortCircuitingCannedResponsesHandler);
+				retryHandler, retrySignalingOnConditionHandler, shortCircuitingCannedResponsesHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -123,7 +123,7 @@ namespace rm.DelegatingHandlersTest
 				});
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), retryHandler, retrySignalingOnConditionHandler, shortCircuitingCannedResponsesHandler);
+				retryHandler, retrySignalingOnConditionHandler, shortCircuitingCannedResponsesHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);

@@ -19,7 +19,7 @@ namespace rm.DelegatingHandlersTest
 				ex => ex is TurnDownForWhatException);
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), swallowingHandler, throwingHandler);
+				swallowingHandler, throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			Assert.DoesNotThrowAsync(async () =>
@@ -39,7 +39,7 @@ namespace rm.DelegatingHandlersTest
 				ex => ex is TurnDownForWhatException);
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), swallowingHandler, throwingHandler);
+				swallowingHandler, throwingHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			Assert.ThrowsAsync<Exception>(async () =>

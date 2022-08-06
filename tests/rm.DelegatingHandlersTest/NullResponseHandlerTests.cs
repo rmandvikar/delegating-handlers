@@ -16,7 +16,7 @@ namespace rm.DelegatingHandlersTest
 			var nullResponseHandler = new NullResponseHandler();
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), nullResponseHandler);
+				nullResponseHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);

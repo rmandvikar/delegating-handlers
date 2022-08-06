@@ -16,7 +16,7 @@ namespace rm.DelegatingHandlersTest
 			var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException());
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);
+				throwingWithProbabilityHandler);
 
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
