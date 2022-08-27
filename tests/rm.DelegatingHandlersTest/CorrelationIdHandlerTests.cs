@@ -23,7 +23,7 @@ namespace rm.DelegatingHandlersTest
 				correlationIdHandler, shortCircuitingCannedResponseHandler);
 			using var request = new HttpRequestMessage();
 
-			using var response = await invoker.SendAsync(request, new CancellationToken());
+			using var response = await invoker.SendAsync(request, CancellationToken.None);
 
 			Assert.IsTrue(request.Headers.Contains(RequestHeaders.CorrelationId));
 			Assert.AreEqual(correlationId, request.Headers.GetValues(RequestHeaders.CorrelationId).Single());
@@ -46,7 +46,7 @@ namespace rm.DelegatingHandlersTest
 				correlationIdHandler, addsCorrelationIdToResponseHandler, shortCircuitingCannedResponseHandler);
 			using var request = new HttpRequestMessage();
 
-			using var response = await invoker.SendAsync(request, new CancellationToken());
+			using var response = await invoker.SendAsync(request, CancellationToken.None);
 
 			Assert.IsTrue(response.Headers.Contains(RequestHeaders.CorrelationId));
 			Assert.AreEqual(correlationIdAlreadyPresent, response.Headers.GetValues(RequestHeaders.CorrelationId).Single());
