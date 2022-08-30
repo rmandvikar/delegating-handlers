@@ -9,7 +9,18 @@ namespace rm.DelegatingHandlersTest
 			HttpRequestMessage request,
 			CancellationToken cancellationToken)
 		{
-			var response = await base.SendAsync(request, cancellationToken);
+			HttpResponseMessage response;
+			try
+			{
+				response = await base.SendAsync(request, cancellationToken);
+			}
+			catch (TaskCanceledException)
+			{
+#pragma warning disable CS0618 // Type or member is obsolete
+				request.Properties[RequestProperties.RetrySignal] = true;
+#pragma warning restore CS0618 // Type or member is obsolete
+				throw;
+			}
 
 			// tweak conditions accordingly
 			if (response.StatusCode == (HttpStatusCode)404)

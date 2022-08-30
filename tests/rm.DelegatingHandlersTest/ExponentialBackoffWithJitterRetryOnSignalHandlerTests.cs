@@ -17,6 +17,7 @@ namespace rm.DelegatingHandlersTest
 			var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
 				(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
 				(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
+				(request) => throw new TaskCanceledException("timeout!"), // retry
 				(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }, // NO retry
 				(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }, // not used
 				(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }  // not used
@@ -42,7 +43,7 @@ namespace rm.DelegatingHandlersTest
 			using var requestMessage = fixture.Create<HttpRequestMessage>();
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			Assert.AreEqual(2, retryAttempt);
+			Assert.AreEqual(3, retryAttempt);
 		}
 
 		[Test]

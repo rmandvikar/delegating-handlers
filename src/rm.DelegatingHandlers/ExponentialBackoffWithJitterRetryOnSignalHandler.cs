@@ -58,9 +58,18 @@ namespace rm.DelegatingHandlers
 						request.Properties[RequestProperties.PollyRetryAttempt] = retryAttempt;
 					}
 					request.Properties.Remove(RequestProperties.RetrySignal);
-					var response = await base.SendAsync(request, ct)
-						.ConfigureAwait(false);
-					return (request, response);
+					try
+					{
+						var response = await base.SendAsync(request, ct)
+							.ConfigureAwait(false);
+						return (request, response);
+					}
+					catch (Exception)
+						when (request.Properties.TryGetValue(RequestProperties.RetrySignal, out var retrySignaledObj) && (bool)retrySignaledObj)
+					{
+						// swallow if retry signaled on ex
+						return (request, null);
+					}
 				},
 				context: new Context(),
 				cancellationToken: cancellationToken)
