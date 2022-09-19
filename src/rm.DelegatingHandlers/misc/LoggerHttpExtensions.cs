@@ -61,6 +61,9 @@ public static class LoggerHttpExtensions
 			// content headers could change once content is read
 			enrichers.AddRange(loggingFormatter.FormatResponseContentHeaders(response.Content.Headers));
 		}
+#if NETSTANDARD2_1
+		enrichers.AddRange(loggingFormatter.FormatResponseTrailingHeaders(response.TrailingHeaders));
+#endif
 		return logger.ForContext(enrichers);
 	}
 
