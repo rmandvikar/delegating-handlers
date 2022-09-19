@@ -49,8 +49,9 @@ namespace rm.DelegatingHandlersTest
 			Assert.AreEqual(1, retryAttempt);
 		}
 
+#if NET6_0_OR_GREATER
 		/// <remarks>
-		/// HttpClient massages the ex thrown, so this test.
+		/// HttpClient massages the ex thrown (at least on net6.0), so this test.
 		/// </remarks>
 		[Test]
 		public void Retry_To_Fix_Infrequent_TaskCanceledException()
@@ -101,6 +102,7 @@ namespace rm.DelegatingHandlersTest
 			Assert.AreEqual(typeof(TaskCanceledException), lastInnerEx.GetType());
 			Assert.AreEqual(1, retryAttempt);
 		}
+#endif
 
 		[Test]
 		public void Retry_With_Higher_Timeout_Does_Not_Throw_TimeoutExpiredException()
