@@ -30,13 +30,22 @@ namespace rm.DelegatingHandlersTest
 #pragma warning restore CS0618 // Type or member is obsolete
 				return response;
 			}
-			var content = await response.Content.ReadAsStringAsync(cancellationToken);
-			if (content.Contains("yawn!"))
+#if NETFRAMEWORK
+			if (response.Content != null)
+#endif
 			{
+				var content = await response.Content.ReadAsStringAsync(
+#if NET6_0_OR_GREATER
+						cancellationToken
+#endif
+						);
+				if (content.Contains("yawn!"))
+				{
 #pragma warning disable CS0618 // Type or member is obsolete
-				request.Properties[RequestProperties.RetrySignal] = true;
+					request.Properties[RequestProperties.RetrySignal] = true;
 #pragma warning restore CS0618 // Type or member is obsolete
-				return response;
+					return response;
+				}
 			}
 
 			return response;
