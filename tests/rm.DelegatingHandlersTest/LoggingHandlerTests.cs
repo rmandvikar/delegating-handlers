@@ -131,6 +131,10 @@ public class LoggingHandlerTests
 				};
 			response.Headers.Add(header1, headerValue1);
 			response.Headers.Add(header2, headerValue2);
+#if NET6_0_OR_GREATER
+			response.TrailingHeaders.Add(header1, headerValue1);
+			response.TrailingHeaders.Add(header2, headerValue2);
+#endif
 
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(response);
 			var loggingHandler = new LoggingHandler(logger, new LoggingFormatter());
@@ -165,6 +169,10 @@ public class LoggingHandlerTests
 				.And.WithProperty($"response.Content.Header.Content-Length").WithValue(responseContent.Length.ToString())
 #endif
 				.And.WithProperty($"response.Content").WithValue(responseContent)
+#if NET6_0_OR_GREATER
+				.And.WithProperty($"response.TrailingHeader.{header1}").WithValue(headerValue1)
+				.And.WithProperty($"response.TrailingHeader.{header2}").WithValue(headerValue2)
+#endif
 				.And.WithProperty($"ElapsedMs").WhichValue<long>().Should().BeGreaterThanOrEqualTo(0)
 				;
 		}
@@ -291,6 +299,10 @@ public class LoggingHandlerTests
 				};
 			response.Headers.Add(header1, headerValue1);
 			response.Headers.Add(header2, headerValue2);
+#if NET6_0_OR_GREATER
+			response.TrailingHeaders.Add(header1, headerValue1);
+			response.TrailingHeaders.Add(header2, headerValue2);
+#endif
 
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(response);
 			var loggingHandler = new LoggingHandler(logger, new CompactLoggingFormatter());
@@ -325,6 +337,10 @@ public class LoggingHandlerTests
 				.And.WithProperty($"rs.c.h.Content-Length").WithValue(responseContent.Length.ToString())
 #endif
 				.And.WithProperty($"rs.c").WithValue(responseContent)
+#if NET6_0_OR_GREATER
+				.And.WithProperty($"rs.th.{header1}").WithValue(headerValue1)
+				.And.WithProperty($"rs.th.{header2}").WithValue(headerValue2)
+#endif
 				.And.WithProperty($"e").WhichValue<long>().Should().BeGreaterThanOrEqualTo(0)
 				;
 		}

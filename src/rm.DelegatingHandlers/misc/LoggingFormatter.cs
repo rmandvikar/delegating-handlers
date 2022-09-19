@@ -81,6 +81,13 @@ public class LoggingFormatter : ILoggingFormatter
 		return loggingFormatterHelper.FormatRequestContentHeaders(contentHeaders, $"{responsePrefix}.Content.Header");
 	}
 
+#if NETSTANDARD2_1
+	public IEnumerable<ILogEventEnricher> FormatResponseTrailingHeaders(HttpResponseHeaders responseTrailingHeaders)
+	{
+		return loggingFormatterHelper.FormatResponseTrailingHeaders(responseTrailingHeaders, $"{responsePrefix}.TrailingHeader");
+	}
+#endif
+
 	public ILogEventEnricher FormatElapsed(Stopwatch stopwatch)
 	{
 		return loggingFormatterHelper.FormatElapsed(stopwatch, "ElapsedMs");

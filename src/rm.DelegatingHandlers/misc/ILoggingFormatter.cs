@@ -28,6 +28,9 @@ public interface ILoggingFormatter
 	IEnumerable<ILogEventEnricher> FormatResponseHeaders(HttpResponseHeaders headers);
 	ILogEventEnricher FormatResponseContent(string content);
 	IEnumerable<ILogEventEnricher> FormatResponseContentHeaders(HttpContentHeaders headers);
+#if NETSTANDARD2_1
+	IEnumerable<ILogEventEnricher> FormatResponseTrailingHeaders(HttpResponseHeaders headers);
+#endif
 
 	ILogEventEnricher FormatElapsed(Stopwatch stopwatch);
 	IEnumerable<ILogEventEnricher> FormatException(Exception exception);

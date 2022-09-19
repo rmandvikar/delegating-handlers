@@ -99,6 +99,17 @@ internal class LoggingFormatterHelper
 		}
 	}
 
+#if NETSTANDARD2_1
+	internal IEnumerable<ILogEventEnricher> FormatResponseTrailingHeaders(HttpResponseHeaders headers, string prefix)
+	{
+		foreach (var header in headers)
+		{
+			// header value is IEnumerable
+			yield return new PropertyEnricher($"{prefix}.{header.Key}", header.Value.ToCsv());
+		}
+	}
+#endif
+
 	internal ILogEventEnricher FormatElapsed(Stopwatch stopwatch, string name)
 	{
 		return new PropertyEnricher(name, stopwatch.ElapsedMilliseconds);
