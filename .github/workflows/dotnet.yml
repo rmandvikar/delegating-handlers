@@ -2,6 +2,10 @@ name: .NET
 
 on: [ push, pull_request ]
 
+env:
+  SLN_PATH: rm.DelegatingHandlers.sln
+  TEST_PROJ_PATH: tests/rm.DelegatingHandlersTest/rm.DelegatingHandlersTest.csproj
+
 jobs:
   build-job:
     runs-on: ubuntu-latest
@@ -15,11 +19,11 @@ jobs:
       run: dotnet restore
     - name: Build
       run: |
-        dotnet build rm.DelegatingHandlers.sln \
+        dotnet build $SLN_PATH \
           -c Release
     - name: Test net6.0
       run: |
-        dotnet test tests/rm.DelegatingHandlersTest/rm.DelegatingHandlersTest.csproj \
+        dotnet test $TEST_PROJ_PATH \
           -c Release --no-build --no-restore \
           -f net6.0 \
           -l:"console;verbosity=normal" \
