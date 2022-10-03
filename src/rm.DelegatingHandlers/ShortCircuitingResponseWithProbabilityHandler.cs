@@ -39,6 +39,8 @@ namespace rm.DelegatingHandlers
 						StatusCode = shortCircuitingResponseWithProbabilityHandlerSettings.StatusCode,
 						ReasonPhrase = $"{nameof(ShortCircuitingResponseWithProbabilityHandler)} says hello!",
 						Content =
+							shortCircuitingResponseWithProbabilityHandlerSettings.Content == null ?
+							null :
 							new StringContent(
 								shortCircuitingResponseWithProbabilityHandlerSettings.Content,
 								Encoding.UTF8,
