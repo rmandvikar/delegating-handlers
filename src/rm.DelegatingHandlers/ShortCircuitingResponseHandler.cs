@@ -32,6 +32,8 @@ namespace rm.DelegatingHandlers
 					StatusCode = shortCircuitingResponseHandlerSettings.StatusCode,
 					ReasonPhrase = $"{nameof(ShortCircuitingResponseHandler)} says hello!",
 					Content =
+						shortCircuitingResponseHandlerSettings.Content == null ?
+						null :
 						new StringContent(
 							shortCircuitingResponseHandlerSettings.Content,
 							Encoding.UTF8,

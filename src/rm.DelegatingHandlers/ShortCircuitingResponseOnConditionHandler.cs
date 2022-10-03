@@ -38,6 +38,8 @@ namespace rm.DelegatingHandlers
 						StatusCode = shortCircuitingResponseOnConditionHandlerSettings.StatusCode,
 						ReasonPhrase = $"{nameof(ShortCircuitingResponseOnConditionHandler)} says hello!",
 						Content =
+							shortCircuitingResponseOnConditionHandlerSettings.Content == null ?
+							null :
 							new StringContent(
 								shortCircuitingResponseOnConditionHandlerSettings.Content,
 								Encoding.UTF8,
