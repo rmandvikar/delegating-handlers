@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
+using Polly.Retry;
 
 namespace rm.DelegatingHandlers
 {
@@ -18,7 +19,7 @@ namespace rm.DelegatingHandlers
 	/// </remarks>
 	public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 	{
-		private readonly IAsyncPolicy<HttpResponseMessage> retryPolicy;
+		private readonly AsyncRetryPolicy<HttpResponseMessage> retryPolicy;
 
 		/// <inheritdoc cref="ExponentialBackoffWithJitterRetryHandler" />
 		public ExponentialBackoffWithJitterRetryHandler(
