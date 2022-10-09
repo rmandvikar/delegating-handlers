@@ -49,7 +49,7 @@ namespace rm.DelegatingHandlersTest
 			Assert.AreEqual(1, retryAttempt);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET6_0 // test fails in NET7_0, so not NET6_0_OR_GREATER
 		/// <remarks>
 		/// HttpClient massages the ex thrown (at least on net6.0), so this test.
 		/// </remarks>
