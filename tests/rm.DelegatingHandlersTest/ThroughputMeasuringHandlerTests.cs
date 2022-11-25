@@ -16,15 +16,20 @@ namespace rm.DelegatingHandlersTest
 		{
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
+			var processedCount = 0;
 			Action<ulong> processThroughput = (throughput) =>
+			{
+				processedCount++;
 				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] throughput: {throughput,10}");
+			};
 			var throughputProcessorMock = fixture.Freeze<Mock<IThroughputProcessor>>();
 			throughputProcessorMock.Setup(x => x.Process(It.IsAny<ulong>())).Callback(processThroughput);
+			var intervalInSeconds = 1;
 			var throughputMeasuringHandler =
 				new ThroughputMeasuringHandler(
 					new ThroughputMeasuringHandlerSettings
 					{
-						IntervalInSeconds = 1,
+						IntervalInSeconds = intervalInSeconds,
 						ThroughputProcessor = throughputProcessorMock.Object,
 					});
 			var shortCircuitingCannedResponseHandler =
@@ -46,6 +51,9 @@ namespace rm.DelegatingHandlersTest
 			}
 			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}]      total: {i,10}");
 			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] disposing... ");
+			invoker.Dispose();
+			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] processedCount: {processedCount}");
+			Assert.GreaterOrEqual(processedCount, durationInSeconds / intervalInSeconds);
 		}
 
 		[Test]
