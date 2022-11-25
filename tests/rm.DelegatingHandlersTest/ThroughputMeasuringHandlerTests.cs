@@ -16,25 +16,39 @@ namespace rm.DelegatingHandlersTest
 		{
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			Action<ulong> processThroughput = (throughput) =>
-				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] throughput: {throughput,10}");
-			var throughputProcessorMock = fixture.Freeze<Mock<IThroughputProcessor>>();
-			throughputProcessorMock.Setup(x => x.Process(It.IsAny<ulong>())).Callback(processThroughput);
-			var throughputMeasuringHandler =
-				new ThroughputMeasuringHandler(
-					new ThroughputMeasuringHandlerSettings
-					{
-						IntervalInSeconds = 1,
-						ThroughputProcessor = throughputProcessorMock.Object,
-					});
-			var shortCircuitingCannedResponseHandler =
-				new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
+			var processedCount = 0;
+			Action<string, double> emit = (metricName, count) =>
+			{
+				processedCount++;
+				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] metricName: {metricName}, count: {count,10}");
+			};
+			var countMetricEmitterMock = fixture.Freeze<Mock<ICountMetricEmitter>>();
+			countMetricEmitterMock
+				.Setup(x => x.Emit(It.IsAny<string>(), It.IsAny<double>()))
+				.Callback(emit);
+			var intervalInSeconds = 1;
+			fixture.Register<IStatsAggregatorSettings>(() =>
+				new StatsAggregatorSettings
+				{
+					MetricName = "dep_count",
+					IntervalInSeconds = intervalInSeconds,
+				});
+			fixture.Register<Action<Exception>>(() => Console.WriteLine);
+			fixture.Register<IStatsAggregator>(() => fixture.Create<CountStatsAggregator>());
+			var throughputMeasuringHandler = fixture.Build<ThroughputMeasuringHandler>()
+				.Without(x => x.InnerHandler)
+				.Create();
+			using var http200 = new HttpResponseMessage(HttpStatusCode.OK);
+			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(http200);
 			using var invoker = HttpMessageInvokerFactory.Create(
 				throughputMeasuringHandler, shortCircuitingCannedResponseHandler);
 
-			var durationInSeconds = 10;
+			var durationInSeconds = 5;
 			var endTime = DateTime.Now.AddSeconds(durationInSeconds);
-			var i = (ulong)0;
+			var i = 0;
+			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] start");
+			var tasksCount = 5;
+			var tasks = new List<Task<HttpResponseMessage>>(tasksCount);
 			while (DateTime.Now < endTime)
 			{
 				using var request = new HttpRequestMessage();
@@ -46,56 +60,9 @@ namespace rm.DelegatingHandlersTest
 			}
 			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}]      total: {i,10}");
 			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] disposing... ");
-		}
-
-		[Test]
-		[TestCase(1)]      // 1s
-		[TestCase(10)]     // 10s
-		[TestCase(60)]     // 1m
-		[TestCase(600)]    // 10m
-		[TestCase(900)]    // 15m
-		[TestCase(1_800)]  // 30m
-		[TestCase(3_600)]  // 1h
-		[TestCase(21_600)] // 6h
-		[TestCase(43_200)] // 12h
-		[TestCase(86_400)] // 1d
-		public void Verify_Interval(int intervalInSeconds)
-		{
-			var throughputMeasuringHandler = new ThroughputMeasuringHandler(
-				new ThroughputMeasuringHandlerSettings
-				{
-					IntervalInSeconds = intervalInSeconds,
-					ThroughputProcessor = null,
-				});
-			var intervalDelay = throughputMeasuringHandler.CalculateNextIntervalDelay(intervalInSeconds);
-			var now = DateTime.Now;
-			var ts = now.AddMilliseconds(intervalDelay);
-			Console.WriteLine($"now:{now:o}");
-			Console.WriteLine($" ts:{ts:o}");
-		}
-
-		[Explicit]
-		[Test]
-		public async Task Measures_Throughput_Even_When_Zero()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
-
-			Action<ulong> processThroughput = (throughput) =>
-				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] throughput: {throughput}");
-			var throughputProcessorMock = fixture.Freeze<Mock<IThroughputProcessor>>();
-			throughputProcessorMock.Setup(x => x.Process(It.IsAny<ulong>())).Callback(processThroughput);
-			var throughputMeasuringHandler =
-				new ThroughputMeasuringHandler(
-					new ThroughputMeasuringHandlerSettings
-					{
-						IntervalInSeconds = 1,
-						ThroughputProcessor = throughputProcessorMock.Object,
-					});
-			using var invoker = HttpMessageInvokerFactory.Create(
-				throughputMeasuringHandler);
-
-			await Task.Delay(2_000);
-			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] disposing... ");
+			invoker.Dispose();
+			Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] processed#: {processedCount}");
+			Assert.GreaterOrEqual(processedCount, durationInSeconds / intervalInSeconds - 1);
 		}
 	}
 }
