@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using rm.Extensions;
 
 namespace rm.DelegatingHandlers
@@ -18,7 +17,7 @@ namespace rm.DelegatingHandlers
 		private readonly IThroughputMeasuringHandlerSettings throughputMeasuringHandlerSettings;
 
 		private long i = 0;
-		private readonly System.Timers.Timer timer;
+		private readonly Timer timer;
 		private const int SecondsInDay = 86_400; // 24h * 60m * 60s
 
 		/// <inheritdoc cref="ThroughputMeasuringHandler" />
@@ -36,22 +35,24 @@ namespace rm.DelegatingHandlers
 			}
 			this.throughputMeasuringHandlerSettings = throughputMeasuringHandlerSettings;
 
-			timer = new System.Timers.Timer();
+			timer = new Timer(Callback, null, Timeout.Infinite, Timeout.Infinite);
 			// setup
-			SetupTimer();
+			StartTimer();
 		}
 
-		private void SetupTimer()
+		private void StartTimer()
 		{
-			timer.AutoReset = false;
-			timer.Elapsed += OnElapsedEvent!;
+			if (disposed)
+			{
+				return;
+			}
 
 			// bin intervals
+			// recalculate due to time creep
 			var nextIntervalDelayInMilliseconds =
 				CalculateNextIntervalDelay(throughputMeasuringHandlerSettings.IntervalInSeconds);
-			timer.Interval = nextIntervalDelayInMilliseconds;
-
-			timer.Start();
+			// schedule
+			timer.Change(nextIntervalDelayInMilliseconds, Timeout.Infinite);
 		}
 
 		/// <remarks>
@@ -69,7 +70,8 @@ namespace rm.DelegatingHandlers
 		{
 			const int MillisecondsInDay = SecondsInDay * 1000;
 			var intervalInMilliseconds = intervalInSeconds * 1000;
-			var millisecondsSinceToday = (int)DateTime.Now.TimeOfDay.TotalMilliseconds;
+			var now = DateTime.Now;
+			var millisecondsSinceToday = (int)now.TimeOfDay.TotalMilliseconds;
 			if (millisecondsSinceToday > MillisecondsInDay)
 			{
 				throw new InvalidOperationException($"millisecondsSinceToday > MillisecondsInDay. millisecondsSinceToday: {millisecondsSinceToday}, MillisecondsInDay: {MillisecondsInDay}");
@@ -81,20 +83,20 @@ namespace rm.DelegatingHandlers
 			return intervalDelayInMilliseconds;
 		}
 
-		private void OnElapsedEvent(object source, ElapsedEventArgs e)
+		private void Callback(object state)
 		{
 			try
 			{
 				MeasureThroughput();
 			}
+			catch
+			{
+				// swallow
+			}
 			finally
 			{
-				// recalculate due to time creep
-				var nextIntervalDelayInMilliseconds =
-					CalculateNextIntervalDelay(throughputMeasuringHandlerSettings.IntervalInSeconds);
-				timer.Interval = nextIntervalDelayInMilliseconds;
-
-				timer.Start();
+				// setup
+				StartTimer();
 			}
 		}
 
@@ -121,6 +123,16 @@ namespace rm.DelegatingHandlers
 			return base.SendAsync(request, cancellationToken);
 		}
 
+		private void StopTimer()
+		{
+			if (disposed)
+			{
+				return;
+			}
+
+			timer.Change(Timeout.Infinite, Timeout.Infinite);
+		}
+
 		private bool disposed = false;
 
 		protected override void Dispose(bool disposing)
@@ -131,7 +143,7 @@ namespace rm.DelegatingHandlers
 				{
 					// current interval
 					// stop timer to avoid race
-					timer?.Stop();
+					StopTimer();
 					try
 					{
 						MeasureThroughput();
