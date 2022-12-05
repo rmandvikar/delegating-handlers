@@ -18,17 +18,11 @@ namespace rm.DelegatingHandlers
 	{
 		private readonly IPercentilesMeasuringHandlerSettings percentilesMeasuringHandlerSettings;
 
-		// note:
-		// with 1 buffer, a lock is needed till calculations are finished. one
-		// approach is to new up a buffer while calculations are done on old buffer,
-		// but this causes GC pressure. so keep 2 buffers, where 1st buffer is for
-		// the active interval, and 2nd buffer is for calculations.
 		private List<long> buffer;
-		private List<long> bufferReserve;
 		private const int capacity = 1_024;
 		private readonly Timer timer;
 		private readonly object locker = new object();
-		private bool firstInterval = true;
+		//private bool firstInterval = true;
 		private const int SecondsInDay = 86_400; // 24h * 60m * 60s
 		private const int SecondsInMinute = 60; // 1m * 60s
 
@@ -53,7 +47,6 @@ namespace rm.DelegatingHandlers
 			this.percentilesMeasuringHandlerSettings = percentilesMeasuringHandlerSettings;
 
 			buffer = new List<long>(capacity);
-			bufferReserve = new List<long>(capacity);
 			timer = new Timer(Callback, null, Timeout.Infinite, Timeout.Infinite);
 			// setup
 			StartTimer();
@@ -118,6 +111,7 @@ namespace rm.DelegatingHandlers
 			{
 				// swallow
 #if DEBUG
+				Console.WriteLine(ex);
 				exceptions.Add(ex);
 #endif
 			}
@@ -130,23 +124,21 @@ namespace rm.DelegatingHandlers
 
 		private void MeasurePercentiles()
 		{
+			List<long> sequence;
 			lock (locker)
 			{
-				// swap buffer refs
-				Helper.Swap(ref buffer, ref bufferReserve);
-				// clear leftovers before reuse
-				buffer.Clear();
+				// read buffer ref
+				sequence = buffer;
+				buffer = new List<long>(buffer.Capacity);
 
-				// shortcircuit for 1st interval
-				if (firstInterval)
-				{
-					firstInterval = false;
-					return;
-				}
+				//// shortcircuit for 1st interval
+				//if (firstInterval)
+				//{
+				//	firstInterval = false;
+				//	return;
+				//}
 			}
 
-			// read buffer ref
-			var sequence = bufferReserve;
 			int N;
 			double p50 = 0, p90 = 0, p95 = 0, p99 = 0, p999 = 0, p9999 = 0;
 			N = sequence.Count;
@@ -244,10 +236,25 @@ namespace rm.DelegatingHandlers
 					// current interval
 					// stop timer to avoid race
 					StopTimer();
+					try
+					{
+						MeasurePercentiles();
+					}
+					catch
+#if DEBUG
+						(Exception ex)
+#endif
+					{
+						// swallow
+#if DEBUG
+						Console.WriteLine(ex);
+						exceptions.Add(ex);
+#endif
+					}
 
 					timer?.Dispose();
 
-					buffer = bufferReserve = null;
+					buffer = null;
 
 					disposed = true;
 				}
