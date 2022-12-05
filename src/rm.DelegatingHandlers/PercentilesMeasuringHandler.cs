@@ -103,14 +103,11 @@ namespace rm.DelegatingHandlers
 			{
 				MeasurePercentiles();
 			}
-			catch
-#if DEBUG
-				(Exception ex)
-#endif
+			catch (Exception ex)
 			{
 				// swallow
+				percentilesMeasuringHandlerSettings.HandleException?.Invoke(ex);
 #if DEBUG
-				Console.WriteLine(ex);
 				exceptions.Add(ex);
 #endif
 			}
@@ -234,14 +231,11 @@ namespace rm.DelegatingHandlers
 					{
 						MeasurePercentiles();
 					}
-					catch
-#if DEBUG
-						(Exception ex)
-#endif
+					catch (Exception ex)
 					{
 						// swallow
+						percentilesMeasuringHandlerSettings.HandleException?.Invoke(ex);
 #if DEBUG
-						Console.WriteLine(ex);
 						exceptions.Add(ex);
 #endif
 					}
@@ -261,6 +255,7 @@ namespace rm.DelegatingHandlers
 		string MetricName { get; }
 		int IntervalInSeconds { get; }
 		IPercentilesMeasuringProcessor PercentilesMeasuringProcessor { get; }
+		Action<Exception> HandleException { get; }
 	}
 
 	public interface IPercentilesMeasuringProcessor
@@ -279,5 +274,6 @@ namespace rm.DelegatingHandlers
 		public string MetricName { get; init; }
 		public int IntervalInSeconds { get; init; }
 		public IPercentilesMeasuringProcessor PercentilesMeasuringProcessor { get; init; }
+		public Action<Exception> HandleException { get; init; }
 	}
 }

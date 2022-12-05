@@ -34,6 +34,7 @@ namespace rm.DelegatingHandlersTest
 						MetricName = "dep_latency_ms",
 						IntervalInSeconds = intervalInSeconds,
 						PercentilesMeasuringProcessor = percentilesMeasuringProcessorMock.Object,
+						HandleException = (ex) => Console.WriteLine(ex),
 					});
 			using var http200 = new HttpResponseMessage(HttpStatusCode.OK);
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(http200);
