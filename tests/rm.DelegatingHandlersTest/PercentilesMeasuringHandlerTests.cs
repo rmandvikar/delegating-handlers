@@ -17,14 +17,14 @@ namespace rm.DelegatingHandlersTest
 			var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 			var processedCount = 0;
-			Action<string, int, double, double, double, double, double, double> processPercentiles = (metricName, N, p50, p90, p95, p99, p999, p9999) =>
+			Action<string, int, double, double, double, double, double, double, double, double> processPercentiles = (metricName, N, p0, p50, p90, p95, p99, p999, p9999, p100) =>
 			{
 				processedCount++;
-				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] metricName: {metricName}, N: {N,10}, p50: {p50,10:F3}, p90: {p90,10:F3}, p95: {p95,10:F3}, p99: {p99,10:F3}, p999: {p999,10:F3}, p9999: {p9999,10:F3}");
+				Console.WriteLine($"[{DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss\.fff")}] metricName: {metricName}, N: {N,10}, p0: {p0,10:F3}, p50: {p50,10:F3}, p90: {p90,10:F3}, p95: {p95,10:F3}, p99: {p99,10:F3}, p999: {p999,10:F3}, p9999: {p9999,10:F3}, p100: {p100,10:F3}");
 			};
 			var percentilesMeasuringProcessorMock = fixture.Freeze<Mock<IPercentilesMeasuringProcessor>>();
 			percentilesMeasuringProcessorMock
-				.Setup(x => x.Process(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>()))
+				.Setup(x => x.Process(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>()))
 				.Callback(processPercentiles);
 			var intervalInSeconds = 1;
 			var percentilesMeasuringHandler =

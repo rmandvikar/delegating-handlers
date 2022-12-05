@@ -148,7 +148,7 @@ namespace rm.DelegatingHandlers
 			// read buffer ref
 			var sequence = bufferReserve;
 			int N;
-			double p50 = 0, p90 = 0, p95 = 0, p99 = 0, p999 = 0, p9999 = 0;
+			double p0 = 0, p50 = 0, p90 = 0, p95 = 0, p99 = 0, p999 = 0, p9999 = 0, p100 = 0;
 			N = sequence.Count;
 			// shortcircuit when N = 0
 			if (N == 0)
@@ -158,16 +158,18 @@ namespace rm.DelegatingHandlers
 
 			sequence.Sort();
 			Parallel.Invoke(
+				() => p0 = Percentile(sequence, N, 0.0d),
 				() => p50 = Percentile(sequence, N, 0.50d),
 				() => p90 = Percentile(sequence, N, 0.90d),
 				() => p95 = Percentile(sequence, N, 0.95d),
 				() => p99 = Percentile(sequence, N, 0.99d),
 				() => p999 = Percentile(sequence, N, 0.999d),
-				() => p9999 = Percentile(sequence, N, 0.9999d)
+				() => p9999 = Percentile(sequence, N, 0.9999d),
+				() => p100 = Percentile(sequence, N, 1.0d)
 				);
 
 			percentilesMeasuringHandlerSettings.PercentilesMeasuringProcessor.Process(
-				percentilesMeasuringHandlerSettings.MetricName, N, p50, p90, p95, p99, p999, p9999);
+				percentilesMeasuringHandlerSettings.MetricName, N, p0, p50, p90, p95, p99, p999, p9999, p100);
 		}
 
 		/// <summary>
@@ -267,8 +269,10 @@ namespace rm.DelegatingHandlers
 		void Process(
 			string metricName,
 			int N,
+			double p0,
 			double p50, double p90, double p95, double p99,
-			double p999, double p9999);
+			double p999, double p9999,
+			double p100);
 	}
 
 	public class PercentilesMeasuringHandlerSettings : IPercentilesMeasuringHandlerSettings
