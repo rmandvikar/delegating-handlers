@@ -147,6 +147,9 @@ namespace rm.DelegatingHandlers
 
 		protected override void Dispose(bool disposing)
 		{
+			// resources are used in base, so base.Dispose() here
+			base.Dispose(disposing);
+
 			if (!disposed)
 			{
 				if (disposing)
@@ -156,8 +159,6 @@ namespace rm.DelegatingHandlers
 					disposed = true;
 				}
 			}
-
-			base.Dispose(disposing);
 		}
 	}
 }
