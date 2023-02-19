@@ -1,57 +1,56 @@
 ﻿using System;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+/// <summary>
+/// Emits last.
+/// </summary>
+public interface IGaugeMetricEmitter
 {
-	/// <summary>
-	/// Emits last.
-	/// </summary>
-	public interface IGaugeMetricEmitter
+	void Emit(
+		string metricName,
+		double last);
+}
+
+public class GaugeStatsAggregator : StatsAggregatorBase
+{
+	private readonly IStatsAggregatorSettings statsAggregatorSettings;
+	private readonly IGaugeMetricEmitter gaugeMetricEmitter;
+	private double? gauge = null;
+
+	public GaugeStatsAggregator(
+		IStatsAggregatorSettings statsAggregatorSettings,
+		IGaugeMetricEmitter gaugeMetricEmitter,
+		Action<Exception> onProcessingError)
+		: base(
+			  statsAggregatorSettings,
+			  onProcessingError)
 	{
-		void Emit(
-			string metricName,
-			double last);
+		this.statsAggregatorSettings = statsAggregatorSettings
+			?? throw new ArgumentNullException(nameof(statsAggregatorSettings));
+		this.gaugeMetricEmitter = gaugeMetricEmitter
+			?? throw new ArgumentNullException(nameof(gaugeMetricEmitter));
 	}
 
-	public class GaugeStatsAggregator : StatsAggregatorBase
+	protected override void AggregateStats()
 	{
-		private readonly IStatsAggregatorSettings statsAggregatorSettings;
-		private readonly IGaugeMetricEmitter gaugeMetricEmitter;
-		private double? gauge = null;
-
-		public GaugeStatsAggregator(
-			IStatsAggregatorSettings statsAggregatorSettings,
-			IGaugeMetricEmitter gaugeMetricEmitter,
-			Action<Exception> onProcessingError)
-			: base(
-				  statsAggregatorSettings,
-				  onProcessingError)
+		double? gaugeForInterval;
+		lock (locker)
 		{
-			this.statsAggregatorSettings = statsAggregatorSettings
-				?? throw new ArgumentNullException(nameof(statsAggregatorSettings));
-			this.gaugeMetricEmitter = gaugeMetricEmitter
-				?? throw new ArgumentNullException(nameof(gaugeMetricEmitter));
+			gaugeForInterval = gauge;
+			gauge = null;
 		}
-
-		protected override void AggregateStats()
+		if (gaugeForInterval != null)
 		{
-			double? gaugeForInterval;
-			lock (locker)
-			{
-				gaugeForInterval = gauge;
-				gauge = null;
-			}
-			if (gaugeForInterval != null)
-			{
-				gaugeMetricEmitter.Emit(statsAggregatorSettings.MetricName, gaugeForInterval.Value);
-			}
+			gaugeMetricEmitter.Emit(statsAggregatorSettings.MetricName, gaugeForInterval.Value);
 		}
+	}
 
-		public override void Add(double value)
+	public override void Add(double value)
+	{
+		lock (locker)
 		{
-			lock (locker)
-			{
-				gauge = value;
-			}
+			gauge = value;
 		}
 	}
 }

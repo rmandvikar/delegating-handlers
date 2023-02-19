@@ -4,25 +4,24 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class RelayHandlerTests
 {
-	[TestFixture]
-	public class RelayHandlerTests
+	[Test]
+	public async Task Relays()
 	{
-		[Test]
-		public async Task Relays()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var relayHandler = new RelayHandler();
+		var relayHandler = new RelayHandler();
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), relayHandler);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), relayHandler);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-		}
+		Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 	}
 }

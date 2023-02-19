@@ -3,76 +3,75 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class ThrowingOnConditionHandlerTests
 {
-	[TestFixture]
-	public class ThrowingOnConditionHandlerTests
+	[Test]
+	public void Throws()
 	{
-		[Test]
-		public void Throws()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
+		var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
-			requestMessage.Properties[typeof(ThrowingOnConditionHandler).FullName!] = true;
+		requestMessage.Properties[typeof(ThrowingOnConditionHandler).FullName!] = true;
 #pragma warning restore CS0618 // Type or member is obsolete
-			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
-			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-			});
-		}
-
-		[Test]
-		[TestCase(true, false)]
-		[TestCase(true, null)]
-		[TestCase(false, null)]
-		public void Does_Not_Throw(bool isValuePresent, object value)
+		var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+	}
 
-			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
+	[Test]
+	[TestCase(true, false)]
+	[TestCase(true, null)]
+	[TestCase(false, null)]
+	public void Does_Not_Throw(bool isValuePresent, object value)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
+		var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			if (isValuePresent)
-			{
-#pragma warning disable CS0618 // Type or member is obsolete
-				requestMessage.Properties[typeof(ThrowingOnConditionHandler).FullName!] = value;
-#pragma warning restore CS0618 // Type or member is obsolete
-			}
-			Assert.DoesNotThrowAsync(async () =>
-			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-			});
-		}
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
 
-		[Test]
-		[TestCase(0)]
-		public void Throws_On_Invalid_Value(object value)
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		if (isValuePresent)
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
-
-			var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
-
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
-
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
 #pragma warning disable CS0618 // Type or member is obsolete
 			requestMessage.Properties[typeof(ThrowingOnConditionHandler).FullName!] = value;
 #pragma warning restore CS0618 // Type or member is obsolete
-			Assert.ThrowsAsync<InvalidCastException>(async () =>
-			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-			});
 		}
+		Assert.DoesNotThrowAsync(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+	}
+
+	[Test]
+	[TestCase(0)]
+	public void Throws_On_Invalid_Value(object value)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var throwingOnConditionHandler = new ThrowingOnConditionHandler(new TurnDownForWhatException());
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), throwingOnConditionHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+#pragma warning disable CS0618 // Type or member is obsolete
+		requestMessage.Properties[typeof(ThrowingOnConditionHandler).FullName!] = value;
+#pragma warning restore CS0618 // Type or member is obsolete
+		Assert.ThrowsAsync<InvalidCastException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
 	}
 }

@@ -9,6 +9,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <LangVersion>latest</LangVersion>
     <Description>Provides DelegatingHandlers.</Description>
     <PackageTags>HttpClient;DelegatingHandler</PackageTags>
     <RepositoryUrl>https://github.com/rmandvikar/delegating-handlers</RepositoryUrl>

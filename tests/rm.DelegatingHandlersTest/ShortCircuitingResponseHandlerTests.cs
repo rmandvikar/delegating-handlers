@@ -4,34 +4,33 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class ShortCircuitingResponseHandlerTests
 {
-	[TestFixture]
-	public class ShortCircuitingResponseHandlerTests
+	[Test]
+	public async Task ShortCircuits()
 	{
-		[Test]
-		public async Task ShortCircuits()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var statusCode = (HttpStatusCode)42;
-			var content = fixture.Create<string>();
-			var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
-				new ShortCircuitingResponseHandlerSettings
-				{
-					StatusCode = statusCode,
-					Content = content,
-				});
+		var statusCode = (HttpStatusCode)42;
+		var content = fixture.Create<string>();
+		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
+			new ShortCircuitingResponseHandlerSettings
+			{
+				StatusCode = statusCode,
+				Content = content,
+			});
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				shortCircuitingResponseHandler);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			shortCircuitingResponseHandler);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			Assert.AreEqual(statusCode, response.StatusCode);
-			Assert.AreEqual(content, await response.Content.ReadAsStringAsync());
-			Assert.AreEqual($"{nameof(ShortCircuitingResponseHandler)} says hello!", response.ReasonPhrase);
-		}
+		Assert.AreEqual(statusCode, response.StatusCode);
+		Assert.AreEqual(content, await response.Content.ReadAsStringAsync());
+		Assert.AreEqual($"{nameof(ShortCircuitingResponseHandler)} says hello!", response.ReasonPhrase);
 	}
 }

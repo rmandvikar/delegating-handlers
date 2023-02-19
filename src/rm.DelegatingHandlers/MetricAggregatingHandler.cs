@@ -4,65 +4,64 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+/// <summary>
+/// Aggregates metric.
+/// </summary>
+public class MetricAggregatingHandler : DelegatingHandler
 {
-	/// <summary>
-	/// Aggregates metric.
-	/// </summary>
-	public class MetricAggregatingHandler : DelegatingHandler
+	private readonly IStatsAggregator statsAggregator;
+
+	/// <inheritdoc cref="MetricAggregatingHandler" />
+	public MetricAggregatingHandler(
+		IStatsAggregator statsAggregator)
 	{
-		private readonly IStatsAggregator statsAggregator;
+		this.statsAggregator = statsAggregator
+			?? throw new ArgumentNullException(nameof(statsAggregator));
 
-		/// <inheritdoc cref="MetricAggregatingHandler" />
-		public MetricAggregatingHandler(
-			IStatsAggregator statsAggregator)
+		this.statsAggregator.Start();
+	}
+
+	protected override async Task<HttpResponseMessage> SendAsync(
+		HttpRequestMessage request,
+		CancellationToken cancellationToken)
+	{
+		var stopwatch = Stopwatch.StartNew();
+		try
 		{
-			this.statsAggregator = statsAggregator
-				?? throw new ArgumentNullException(nameof(statsAggregator));
-
-			this.statsAggregator.Start();
+			return await base.SendAsync(request, cancellationToken)
+				.ConfigureAwait(false);
 		}
-
-		protected override async Task<HttpResponseMessage> SendAsync(
-			HttpRequestMessage request,
-			CancellationToken cancellationToken)
+		finally
 		{
-			var stopwatch = Stopwatch.StartNew();
+			// note: aggregate AFTER request is processed
+			stopwatch.Stop();
 			try
 			{
-				return await base.SendAsync(request, cancellationToken)
-					.ConfigureAwait(false);
+				statsAggregator.Add(stopwatch.ElapsedMilliseconds);
 			}
-			finally
+			catch
 			{
-				// note: aggregate AFTER request is processed
-				stopwatch.Stop();
-				try
-				{
-					statsAggregator.Add(stopwatch.ElapsedMilliseconds);
-				}
-				catch
-				{
-					// swallow
-				}
+				// swallow
 			}
 		}
+	}
 
-		private bool disposed = false;
+	private bool disposed = false;
 
-		protected override void Dispose(bool disposing)
+	protected override void Dispose(bool disposing)
+	{
+		if (!disposed)
 		{
-			if (!disposed)
+			if (disposing)
 			{
-				if (disposing)
-				{
-					statsAggregator?.Dispose();
+				statsAggregator?.Dispose();
 
-					disposed = true;
-				}
+				disposed = true;
 			}
-
-			base.Dispose(disposing);
 		}
+
+		base.Dispose(disposing);
 	}
 }

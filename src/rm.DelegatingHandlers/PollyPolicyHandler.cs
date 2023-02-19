@@ -4,29 +4,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+/// <summary>
+/// Executes the polly policy.
+/// </summary>
+public class PollyPolicyHandler : DelegatingHandler
 {
-	/// <summary>
-	/// Executes the polly policy.
-	/// </summary>
-	public class PollyPolicyHandler : DelegatingHandler
+	private readonly IAsyncPolicy<HttpResponseMessage> policy;
+
+	/// <inheritdoc cref="PollyPolicyHandler" />
+	public PollyPolicyHandler(
+		IAsyncPolicy<HttpResponseMessage> policy)
 	{
-		private readonly IAsyncPolicy<HttpResponseMessage> policy;
+		this.policy = policy
+			?? throw new ArgumentNullException(nameof(policy));
+	}
 
-		/// <inheritdoc cref="PollyPolicyHandler" />
-		public PollyPolicyHandler(
-			IAsyncPolicy<HttpResponseMessage> policy)
-		{
-			this.policy = policy
-				?? throw new ArgumentNullException(nameof(policy));
-		}
-
-		protected override async Task<HttpResponseMessage> SendAsync(
-			HttpRequestMessage request,
-			CancellationToken cancellationToken)
-		{
-			return await policy.ExecuteAsync((ct) => base.SendAsync(request, ct), cancellationToken)
-				.ConfigureAwait(false);
-		}
+	protected override async Task<HttpResponseMessage> SendAsync(
+		HttpRequestMessage request,
+		CancellationToken cancellationToken)
+	{
+		return await policy.ExecuteAsync((ct) => base.SendAsync(request, ct), cancellationToken)
+			.ConfigureAwait(false);
 	}
 }

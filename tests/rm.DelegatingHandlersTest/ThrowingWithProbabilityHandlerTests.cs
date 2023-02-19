@@ -3,43 +3,42 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class ThrowingWithProbabilityHandlerTests
 {
-	[TestFixture]
-	public class ThrowingWithProbabilityHandlerTests
+	[Test]
+	public void Throws()
 	{
-		[Test]
-		public void Throws()
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException());
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			throwingWithProbabilityHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+	}
 
-			var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException());
+	[Test]
+	public void Does_Not_Throw()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				throwingWithProbabilityHandler);
+		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(0d, new TurnDownForWhatException());
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
-			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-			});
-		}
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);
 
-		[Test]
-		public void Does_Not_Throw()
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Assert.DoesNotThrowAsync(async () =>
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
-
-			var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(0d, new TurnDownForWhatException());
-
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);
-
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			Assert.DoesNotThrowAsync(async () =>
-			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-			});
-		}
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
 	}
 }

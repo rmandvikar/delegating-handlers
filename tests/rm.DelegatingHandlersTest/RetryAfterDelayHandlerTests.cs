@@ -4,57 +4,56 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class RetryAfterDelayHandlerTests
 {
-	[TestFixture]
-	public class RetryAfterDelayHandlerTests
+	[Test]
+	[TestCase(503)]
+	[TestCase(429)]
+	[TestCase(301)]
+	public async Task Adds_RetryAfter_Header_With_Seconds(int statusCode)
 	{
-		[Test]
-		[TestCase(503)]
-		[TestCase(429)]
-		[TestCase(301)]
-		public async Task Adds_RetryAfter_Header_With_Seconds(int statusCode)
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var cannedResponse = new HttpResponseMessage
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+			StatusCode = (HttpStatusCode)statusCode,
+		};
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
+		var delayInSeconds = 42;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
 
-			var cannedResponse = new HttpResponseMessage
-			{
-				StatusCode = (HttpStatusCode)statusCode,
-			};
-			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
-			var delayInSeconds = 42;
-			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		Assert.AreEqual(delayInSeconds.ToString(), response.Headers.GetValues(ResponseHeaders.RetryAfter).Single());
+	}
 
-			Assert.AreEqual(delayInSeconds.ToString(), response.Headers.GetValues(ResponseHeaders.RetryAfter).Single());
-		}
+	[Test]
+	[TestCase(200)]
+	public async Task Does_Not_Add_RetryAfter_Header(int statusCode)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-		[Test]
-		[TestCase(200)]
-		public async Task Does_Not_Add_RetryAfter_Header(int statusCode)
+		var cannedResponse = new HttpResponseMessage
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+			StatusCode = (HttpStatusCode)statusCode,
+		};
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
+		var delayInSeconds = 42;
+		var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
 
-			var cannedResponse = new HttpResponseMessage
-			{
-				StatusCode = (HttpStatusCode)statusCode,
-			};
-			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
-			var delayInSeconds = 42;
-			var retryAfterDelayHandler = new RetryAfterDelayHandler(delayInSeconds);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				retryAfterDelayHandler, shortCircuitingCannedResponseHandler);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
-
-			Assert.IsFalse(response.Headers.Contains(ResponseHeaders.RetryAfter));
-		}
+		Assert.IsFalse(response.Headers.Contains(ResponseHeaders.RetryAfter));
 	}
 }

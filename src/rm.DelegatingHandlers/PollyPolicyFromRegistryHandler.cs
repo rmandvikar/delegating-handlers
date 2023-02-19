@@ -5,44 +5,43 @@ using System.Threading.Tasks;
 using Polly;
 using Polly.Registry;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+/// <summary>
+/// Executes the polly policy fetched from policy registry.
+/// </summary>
+public class PollyPolicyFromRegistryHandler : DelegatingHandler
 {
-	/// <summary>
-	/// Executes the polly policy fetched from policy registry.
-	/// </summary>
-	public class PollyPolicyFromRegistryHandler : DelegatingHandler
+	private readonly IAsyncPolicy<HttpResponseMessage> policy;
+
+	/// <inheritdoc cref="PollyPolicyFromRegistryHandler" />
+	public PollyPolicyFromRegistryHandler(
+		PolicyRegistry policyRegistry,
+		IPollyPolicyFromRegistryHandlerSettings pollyPolicyFromRegistryHandlerSettings)
 	{
-		private readonly IAsyncPolicy<HttpResponseMessage> policy;
+		_ = policyRegistry
+			?? throw new ArgumentNullException(nameof(policyRegistry));
+		_ = pollyPolicyFromRegistryHandlerSettings
+			?? throw new ArgumentNullException(nameof(pollyPolicyFromRegistryHandlerSettings));
 
-		/// <inheritdoc cref="PollyPolicyFromRegistryHandler" />
-		public PollyPolicyFromRegistryHandler(
-			PolicyRegistry policyRegistry,
-			IPollyPolicyFromRegistryHandlerSettings pollyPolicyFromRegistryHandlerSettings)
-		{
-			_ = policyRegistry
-				?? throw new ArgumentNullException(nameof(policyRegistry));
-			_ = pollyPolicyFromRegistryHandlerSettings
-				?? throw new ArgumentNullException(nameof(pollyPolicyFromRegistryHandlerSettings));
-
-			policy = policyRegistry.Get<IAsyncPolicy<HttpResponseMessage>>(pollyPolicyFromRegistryHandlerSettings.PolicyKey);
-		}
-
-		protected override async Task<HttpResponseMessage> SendAsync(
-			HttpRequestMessage request,
-			CancellationToken cancellationToken)
-		{
-			return await policy.ExecuteAsync((ct) => base.SendAsync(request, ct), cancellationToken)
-				.ConfigureAwait(false);
-		}
+		policy = policyRegistry.Get<IAsyncPolicy<HttpResponseMessage>>(pollyPolicyFromRegistryHandlerSettings.PolicyKey);
 	}
 
-	public interface IPollyPolicyFromRegistryHandlerSettings
+	protected override async Task<HttpResponseMessage> SendAsync(
+		HttpRequestMessage request,
+		CancellationToken cancellationToken)
 	{
-		string PolicyKey { get; }
+		return await policy.ExecuteAsync((ct) => base.SendAsync(request, ct), cancellationToken)
+			.ConfigureAwait(false);
 	}
+}
 
-	public record class PollyPolicyFromRegistryHandlerSettings : IPollyPolicyFromRegistryHandlerSettings
-	{
-		public string PolicyKey { get; init; }
-	}
+public interface IPollyPolicyFromRegistryHandlerSettings
+{
+	string PolicyKey { get; }
+}
+
+public record class PollyPolicyFromRegistryHandlerSettings : IPollyPolicyFromRegistryHandlerSettings
+{
+	public string PolicyKey { get; init; }
 }

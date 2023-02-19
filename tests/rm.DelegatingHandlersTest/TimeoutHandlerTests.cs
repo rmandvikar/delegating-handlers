@@ -3,93 +3,92 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class TimeoutHandlerTests
 {
-	[TestFixture]
-	public class TimeoutHandlerTests
+	[Test]
+	public void Times_Out()
 	{
-		[Test]
-		public void Times_Out()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var delayHandler = new ProcrastinatingHandler(
-				new ProcrastinatingHandlerSettings
-				{
-					DelayInMilliseconds = 1_000,
-				});
-			var timeoutHandler = new TimeoutHandler(
-				new TimeoutHandlerSettings
-				{
-					TimeoutInMilliseconds = 1,
-				});
-
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), timeoutHandler, delayHandler);
-
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			var ex = Assert.ThrowsAsync<TimeoutExpiredException>(async () =>
+		var delayHandler = new ProcrastinatingHandler(
+			new ProcrastinatingHandlerSettings
 			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+				DelayInMilliseconds = 1_000,
 			});
-		}
-
-		[Test]
-		public void Does_Not_Time_Out()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
-
-			var timeoutHandler = new TimeoutHandler(
-				new TimeoutHandlerSettings
-				{
-					TimeoutInMilliseconds = 1,
-				});
-
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), timeoutHandler);
-
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			Assert.DoesNotThrowAsync(async () =>
+		var timeoutHandler = new TimeoutHandler(
+			new TimeoutHandlerSettings
 			{
-				using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+				TimeoutInMilliseconds = 1,
 			});
-		}
 
-		[Test]
-		public void Does_Not_Time_Out_When_Other_Token_Cancels()
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), timeoutHandler, delayHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		var ex = Assert.ThrowsAsync<TimeoutExpiredException>(async () =>
 		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+	}
 
-			var delayHandler = new ProcrastinatingHandler(
-				new ProcrastinatingHandlerSettings
-				{
-					DelayInMilliseconds = 100,
-				});
-			var timeoutHandler = new TimeoutHandler(
-				new TimeoutHandlerSettings
-				{
-					TimeoutInMilliseconds = 1_000,
-				});
+	[Test]
+	public void Does_Not_Time_Out()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				fixture.Create<HttpMessageHandler>(), timeoutHandler, delayHandler);
-
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var cts = new CancellationTokenSource(millisecondsDelay: 1);
-
-			var ex = Assert.ThrowsAsync<TaskCanceledException>(async () =>
+		var timeoutHandler = new TimeoutHandler(
+			new TimeoutHandlerSettings
 			{
-				using var _ = await invoker.SendAsync(requestMessage, cts.Token);
+				TimeoutInMilliseconds = 1,
 			});
-			// explicit to clarify
-			Assert.AreNotEqual(typeof(TimeoutExpiredException), ex!.GetType());
-		}
 
-		[Test]
-		public void Is_A_TaskCanceledException()
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), timeoutHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Assert.DoesNotThrowAsync(async () =>
 		{
-			var ex = new TimeoutExpiredException();
-			Assert.IsTrue(ex is TaskCanceledException);
-		}
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+	}
+
+	[Test]
+	public void Does_Not_Time_Out_When_Other_Token_Cancels()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var delayHandler = new ProcrastinatingHandler(
+			new ProcrastinatingHandlerSettings
+			{
+				DelayInMilliseconds = 100,
+			});
+		var timeoutHandler = new TimeoutHandler(
+			new TimeoutHandlerSettings
+			{
+				TimeoutInMilliseconds = 1_000,
+			});
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), timeoutHandler, delayHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var cts = new CancellationTokenSource(millisecondsDelay: 1);
+
+		var ex = Assert.ThrowsAsync<TaskCanceledException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, cts.Token);
+		});
+		// explicit to clarify
+		Assert.AreNotEqual(typeof(TimeoutExpiredException), ex!.GetType());
+	}
+
+	[Test]
+	public void Is_A_TaskCanceledException()
+	{
+		var ex = new TimeoutExpiredException();
+		Assert.IsTrue(ex is TaskCanceledException);
 	}
 }

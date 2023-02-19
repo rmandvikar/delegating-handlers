@@ -1,60 +1,59 @@
 ﻿using System;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+/// <summary>
+/// Emits average.
+/// </summary>
+public interface IRateMetricEmitter
 {
-	/// <summary>
-	/// Emits average.
-	/// </summary>
-	public interface IRateMetricEmitter
+	void Emit(
+		string metricName,
+		double rate);
+}
+
+public class RateStatsAggregator : StatsAggregatorBase
+{
+	private readonly IStatsAggregatorSettings statsAggregatorSettings;
+	private readonly IRateMetricEmitter rateMetricEmitter;
+	private double sum = 0d;
+	private long N = 0;
+
+	public RateStatsAggregator(
+		IStatsAggregatorSettings statsAggregatorSettings,
+		IRateMetricEmitter rateMetricEmitter,
+		Action<Exception> onProcessingError)
+		: base(
+			  statsAggregatorSettings,
+			  onProcessingError)
 	{
-		void Emit(
-			string metricName,
-			double rate);
+		this.statsAggregatorSettings = statsAggregatorSettings
+			?? throw new ArgumentNullException(nameof(statsAggregatorSettings));
+		this.rateMetricEmitter = rateMetricEmitter
+			?? throw new ArgumentNullException(nameof(rateMetricEmitter));
 	}
 
-	public class RateStatsAggregator : StatsAggregatorBase
+	protected override void AggregateStats()
 	{
-		private readonly IStatsAggregatorSettings statsAggregatorSettings;
-		private readonly IRateMetricEmitter rateMetricEmitter;
-		private double sum = 0d;
-		private long N = 0;
-
-		public RateStatsAggregator(
-			IStatsAggregatorSettings statsAggregatorSettings,
-			IRateMetricEmitter rateMetricEmitter,
-			Action<Exception> onProcessingError)
-			: base(
-				  statsAggregatorSettings,
-				  onProcessingError)
+		double? rateForInterval;
+		lock (locker)
 		{
-			this.statsAggregatorSettings = statsAggregatorSettings
-				?? throw new ArgumentNullException(nameof(statsAggregatorSettings));
-			this.rateMetricEmitter = rateMetricEmitter
-				?? throw new ArgumentNullException(nameof(rateMetricEmitter));
+			rateForInterval = N != 0 ? sum / N : null;
+			sum = 0;
+			N = 0;
 		}
-
-		protected override void AggregateStats()
+		if (rateForInterval != null)
 		{
-			double? rateForInterval;
-			lock (locker)
-			{
-				rateForInterval = N != 0 ? sum / N : null;
-				sum = 0;
-				N = 0;
-			}
-			if (rateForInterval != null)
-			{
-				rateMetricEmitter.Emit(statsAggregatorSettings.MetricName, rateForInterval.Value);
-			}
+			rateMetricEmitter.Emit(statsAggregatorSettings.MetricName, rateForInterval.Value);
 		}
+	}
 
-		public override void Add(double value)
+	public override void Add(double value)
+	{
+		lock (locker)
 		{
-			lock (locker)
-			{
-				sum += value;
-				N += 1;
-			}
+			sum += value;
+			N += 1;
 		}
 	}
 }

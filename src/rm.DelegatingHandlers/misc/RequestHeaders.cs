@@ -1,7 +1,6 @@
-﻿namespace rm.DelegatingHandlers
+﻿namespace rm.DelegatingHandlers;
+
+public static class RequestHeaders
 {
-	public static class RequestHeaders
-	{
-		public const string CorrelationId = "x-correlation-id";
-	}
+	public const string CorrelationId = "x-correlation-id";
 }

@@ -3,26 +3,25 @@ using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 
-namespace rm.DelegatingHandlersTest
+namespace rm.DelegatingHandlersTest;
+
+[TestFixture]
+public class ShortCircuitingCannedResponseHandlerTests
 {
-	[TestFixture]
-	public class ShortCircuitingCannedResponseHandlerTests
+	[Test]
+	public async Task ShortCircuits()
 	{
-		[Test]
-		public async Task ShortCircuits()
-		{
-			var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-			var cannedResponse = fixture.Create<HttpResponseMessage>();
-			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
+		var cannedResponse = fixture.Create<HttpResponseMessage>();
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
 
-			using var invoker = HttpMessageInvokerFactory.Create(
-				shortCircuitingCannedResponseHandler);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			shortCircuitingCannedResponseHandler);
 
-			using var requestMessage = fixture.Create<HttpRequestMessage>();
-			using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var response = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
-			Assert.AreEqual(response, cannedResponse);
-		}
+		Assert.AreEqual(response, cannedResponse);
 	}
 }

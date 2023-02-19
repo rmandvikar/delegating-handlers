@@ -3,33 +3,32 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace rm.DelegatingHandlers
+namespace rm.DelegatingHandlers;
+
+public class SwallowingHandler : DelegatingHandler
 {
-	public class SwallowingHandler : DelegatingHandler
+	private readonly Func<Exception, bool> predicate;
+
+	public SwallowingHandler(
+		Func<Exception, bool> predicate)
 	{
-		private readonly Func<Exception, bool> predicate;
+		this.predicate = predicate
+			?? throw new ArgumentNullException(nameof(predicate));
+	}
 
-		public SwallowingHandler(
-			Func<Exception, bool> predicate)
+	protected override async Task<HttpResponseMessage> SendAsync(
+		HttpRequestMessage request,
+		CancellationToken cancellationToken)
+	{
+		try
 		{
-			this.predicate = predicate
-				?? throw new ArgumentNullException(nameof(predicate));
+			return await base.SendAsync(request, cancellationToken)
+				.ConfigureAwait(false);
 		}
-
-		protected override async Task<HttpResponseMessage> SendAsync(
-			HttpRequestMessage request,
-			CancellationToken cancellationToken)
+		catch (Exception ex) when (predicate(ex))
 		{
-			try
-			{
-				return await base.SendAsync(request, cancellationToken)
-					.ConfigureAwait(false);
-			}
-			catch (Exception ex) when (predicate(ex))
-			{
-				// swallow
-				return null!;
-			}
+			// swallow
+			return null!;
 		}
 	}
 }
