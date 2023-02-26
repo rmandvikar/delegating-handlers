@@ -22,6 +22,7 @@
     <PackageReference Include="Serilog.Sinks.InMemory.Assertions" Version="0.9.1" />
     <PackageReference Include="Serilog.Sinks.TextWriter" Version="2.1.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Net.Http.WinHttpHandler" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
