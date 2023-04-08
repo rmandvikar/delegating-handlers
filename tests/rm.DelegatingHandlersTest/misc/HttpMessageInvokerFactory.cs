@@ -12,13 +12,17 @@ public static class HttpMessageInvokerFactory
 		HttpMessageHandler innerHandler,
 		params DelegatingHandler[] handlers)
 	{
-		if (handlers == null || !handlers.Any())
+		if (handlers == null)
 		{
 			throw new ArgumentNullException(nameof(handlers));
 		}
 		if (handlers.Any(x => x == null))
 		{
 			throw new ArgumentNullException(nameof(handlers), "At least one of the handlers is null.");
+		}
+		if (!handlers.Any())
+		{
+			return new HttpMessageInvoker(innerHandler);
 		}
 
 		var first = handlers[0];
