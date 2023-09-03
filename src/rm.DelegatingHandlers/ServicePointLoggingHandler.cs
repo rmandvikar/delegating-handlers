@@ -28,14 +28,18 @@ public class ServicePointLoggingHandler : DelegatingHandler
 		HttpRequestMessage request,
 		CancellationToken cancellationToken)
 	{
-		var response = await base.SendAsync(request, cancellationToken)
-			.ConfigureAwait(false);
+		try
+		{
+			return await base.SendAsync(request, cancellationToken)
+				.ConfigureAwait(false);
+		}
+		finally
+		{
+			var servicePoint = ServicePointManager.FindServicePoint(request.RequestUri);
 
-		var servicePoint = ServicePointManager.FindServicePoint(request.RequestUri);
-
-		var props =
-			new ILogEventEnricher[]
-			{
+			var props =
+				new ILogEventEnricher[]
+				{
 				// global
 				new PropertyEnricher("CheckCertificateRevocationList", ServicePointManager.CheckCertificateRevocationList),
 				new PropertyEnricher("DefaultConnectionLimit", ServicePointManager.DefaultConnectionLimit),
@@ -65,11 +69,10 @@ public class ServicePointLoggingHandler : DelegatingHandler
 				new PropertyEnricher("host.IdleSince", servicePoint.IdleSince),
 				new PropertyEnricher("host.MaxIdleTime", servicePoint.MaxIdleTime),
 				new PropertyEnricher("host.ReceiveBufferSize", servicePoint.ReceiveBufferSize),
-			};
+				};
 
-		logger.ForContext(props)
-			.Information("ServicePoint stats");
-
-		return response;
+			logger.ForContext(props)
+				.Information("ServicePoint stats");
+		}
 	}
 }

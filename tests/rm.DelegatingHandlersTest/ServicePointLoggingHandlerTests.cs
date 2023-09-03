@@ -31,4 +31,29 @@ public class ServicePointLoggingHandlerTests
 			x.Information("ServicePoint stats"),
 			Times.Once);
 	}
+
+	[Test]
+	public void Logs_ServicePoint_Stats_During_Exception()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var loggerMock = fixture.Freeze<Mock<ILogger>>();
+		loggerMock.Setup(x => x.ForContext(It.IsAny<Type>())).Returns(loggerMock.Object);
+		loggerMock.Setup(x => x.ForContext(It.IsAny<IEnumerable<ILogEventEnricher>>())).Returns(loggerMock.Object);
+		var servicePointLoggingHandler = new ServicePointLoggingHandler(loggerMock.Object);
+		var throwingHandler = new ThrowingHandler(new TurnDownForWhatException());
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			fixture.Create<HttpMessageHandler>(), servicePointLoggingHandler, throwingHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+
+		loggerMock.Verify((x) =>
+			x.Information("ServicePoint stats"),
+			Times.Once);
+	}
 }
