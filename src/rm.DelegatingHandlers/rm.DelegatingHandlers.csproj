@@ -27,6 +27,7 @@
   <ItemGroup>
     <PackageReference Include="IsExternalInit" Version="1.0.3" />
     <PackageReference Include="K4os.Hash.xxHash" Version="1.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.1.6" />
     <PackageReference Include="Polly" Version="7.2.2" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageReference Include="rm.Extensions" Version="2.8.2" />
