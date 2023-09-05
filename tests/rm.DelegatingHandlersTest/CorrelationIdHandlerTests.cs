@@ -27,7 +27,7 @@ public class CorrelationIdHandlerTests
 
 		Assert.IsTrue(request.Headers.Contains(RequestHeaders.CorrelationId));
 		Assert.AreEqual(correlationId, request.Headers.GetValues(RequestHeaders.CorrelationId).Single());
-		Assert.IsTrue(response.Headers.Contains(RequestHeaders.CorrelationId));
+		Assert.IsTrue(response.Headers.Contains(ResponseHeaders.CorrelationId));
 		Assert.AreEqual(correlationId, response.Headers.GetValues(RequestHeaders.CorrelationId).Single());
 	}
 
