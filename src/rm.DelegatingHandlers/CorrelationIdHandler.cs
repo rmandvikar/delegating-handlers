@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using rm.Extensions;
 
 namespace rm.DelegatingHandlers;
@@ -31,23 +33,39 @@ public class CorrelationIdHandler : DelegatingHandler
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header already present with value '{value}'");
 		}
 
-		var correlationId = correlationIdContext.GetValue();
-		if (correlationId.IsNullOrWhiteSpace())
+		var correlationIds = correlationIdContext.GetValue().Where(c => !c.IsNullOrWhiteSpace());
+		if (correlationIds.IsNullOrEmpty())
 		{
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header value cannot be null/empty/whitespace");
 		}
 
-		request.Headers.Add(RequestHeaders.CorrelationId, correlationId);
+		foreach (var correlationId in correlationIds)
+		{
+			request.Headers.Add(RequestHeaders.CorrelationId, correlationId);
+		}
 
 		var response = await base.SendAsync(request, cancellationToken)
 			.ConfigureAwait(false);
 
-		// add correlationId to response header
-		// if correlationId already present, noop
-		// assume valid correlationId value if already present
-		if (!response.Headers.Contains(ResponseHeaders.CorrelationId))
+		// add correlationId(s) to response header
+		// if correlationId(s) already present, dedupe but can't guarantee order
+		response.Headers.TryGetValues(ResponseHeaders.CorrelationId, out var responseCorrelationIds);
+		responseCorrelationIds = responseCorrelationIds.EmptyIfDefault();
+		foreach (var correlationId in correlationIds)
 		{
-			response.Headers.Add(ResponseHeaders.CorrelationId, correlationId);
+			var found = false;
+			foreach (var responseCorrelationId in responseCorrelationIds)
+			{
+				if (correlationId == responseCorrelationId)
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				response.Headers.Add(ResponseHeaders.CorrelationId, correlationId);
+			}
 		}
 
 		return response;
@@ -62,5 +80,5 @@ public interface ICorrelationIdContext
 	/// <summary>
 	/// Returns correlationId value.
 	/// </summary>
-	string GetValue();
+	StringValues GetValue();
 }
