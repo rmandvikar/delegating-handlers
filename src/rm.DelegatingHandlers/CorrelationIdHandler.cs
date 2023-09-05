@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using rm.Extensions;
 
 namespace rm.DelegatingHandlers;
@@ -31,23 +32,30 @@ public class CorrelationIdHandler : DelegatingHandler
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header already present with value '{value}'");
 		}
 
-		var correlationId = correlationIdContext.GetValue();
-		if (correlationId.IsNullOrWhiteSpace())
+		var correlationIds = correlationIdContext.GetValue();
+		if (correlationIds.IsNullOrEmpty()
+			|| (correlationIds.TrySingle(out var correlationIdValue) && correlationIdValue.IsNullOrWhiteSpace()))
 		{
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header value cannot be null/empty/whitespace");
 		}
 
-		request.Headers.Add(RequestHeaders.CorrelationId, correlationId);
+		foreach (var correlationId in correlationIds)
+		{
+			request.Headers.Add(RequestHeaders.CorrelationId, correlationId);
+		}
 
 		var response = await base.SendAsync(request, cancellationToken)
 			.ConfigureAwait(false);
 
 		// add correlationId to response header
 		// if correlationId already present, noop
-		// assume valid correlationId value if already present
+		// assume valid correlationId value(s) if already present
 		if (!response.Headers.Contains(ResponseHeaders.CorrelationId))
 		{
-			response.Headers.Add(ResponseHeaders.CorrelationId, correlationId);
+			foreach (var correlationId in correlationIds)
+			{
+				response.Headers.Add(ResponseHeaders.CorrelationId, correlationId);
+			}
 		}
 
 		return response;
@@ -62,5 +70,5 @@ public interface ICorrelationIdContext
 	/// <summary>
 	/// Returns correlationId value.
 	/// </summary>
-	string GetValue();
+	StringValues GetValue();
 }
