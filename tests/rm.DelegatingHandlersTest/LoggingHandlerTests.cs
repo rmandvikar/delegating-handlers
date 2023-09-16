@@ -110,6 +110,8 @@ public class LoggingHandlerTests
 			var propertyValue1 = "propertyValue1";
 			var property2 = "property02";
 			var propertyValue2 = "propertyValue02";
+			var property3 = "property03";
+			var propertyValue3 = "propertyValue03";
 			using var request =
 				new HttpRequestMessage(method, uri)
 				{
@@ -137,10 +139,18 @@ public class LoggingHandlerTests
 #endif
 
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(response);
+			var delegateHandler = new DelegateHandler(
+				postDelegate: (request, response, ct) =>
+				{
+#pragma warning disable CS0618 // Type or member is obsolete
+					request.Properties.Add(property3, propertyValue3);
+#pragma warning restore CS0618 // Type or member is obsolete
+					return Task.FromResult(response);
+				});
 			var loggingHandler = new LoggingHandler(logger, new LoggingFormatter());
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				loggingHandler, shortCircuitingCannedResponseHandler);
+				loggingHandler, delegateHandler, shortCircuitingCannedResponseHandler);
 
 			using var _ = await invoker.SendAsync(request, CancellationToken.None);
 
@@ -159,6 +169,7 @@ public class LoggingHandlerTests
 				.And.WithProperty($"request.Content").WithValue(requestContent)
 				.And.WithProperty($"request.Property.{property1}").WithValue(propertyValue1)
 				.And.WithProperty($"request.Property.{property2}").WithValue(propertyValue2)
+				.And.WithProperty($"request.Property.{property3}").WithValue(propertyValue3)
 				.And.WithProperty($"response.Version").WithValue(version)
 				.And.WithProperty($"response.StatusCode").WithValue((int)statusCode)
 				.And.WithProperty($"response.ReasonPhrase").WithValue(statusCode.ToString())
@@ -224,8 +235,8 @@ public class LoggingHandlerTests
 			response.Headers.Add(header2, headerValue2);
 
 			var swallowingHandler = new SwallowingHandler(ex => ex is TurnDownForWhatException);
-			var throwingHandler = new ThrowingHandler(new TurnDownForWhatException());
 			var loggingHandler = new LoggingHandler(logger, new LoggingFormatter());
+			var throwingHandler = new ThrowingHandler(new TurnDownForWhatException());
 
 			using var invoker = HttpMessageInvokerFactory.Create(
 				swallowingHandler, loggingHandler, throwingHandler);

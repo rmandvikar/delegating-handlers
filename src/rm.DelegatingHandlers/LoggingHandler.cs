@@ -32,10 +32,10 @@ public class LoggingHandler : DelegatingHandler
 		HttpRequestMessage request,
 		CancellationToken cancellationToken)
 	{
-		ILogger l = logger;
-		l = await l.ForContextAsync(request, loggingFormatter)
+		ILogger lRequest = logger;
+		lRequest = await lRequest.ForContextAsync(request, loggingFormatter)
 			.ConfigureAwait(false);
-		l.Information("request/");
+		lRequest.Information("request/");
 
 		var stopwatch = Stopwatch.StartNew();
 		try
@@ -45,10 +45,13 @@ public class LoggingHandler : DelegatingHandler
 
 			stopwatch.Stop();
 
-			l = await l.ForContextAsync(response, loggingFormatter)
+			ILogger lResponse = logger;
+			lResponse = await lResponse.ForContextAsync(request, loggingFormatter)
 				.ConfigureAwait(false);
-			l = l.ForContext(stopwatch, loggingFormatter);
-			l.Information("request/response");
+			lResponse = await lResponse.ForContextAsync(response, loggingFormatter)
+				.ConfigureAwait(false);
+			lResponse = lResponse.ForContext(stopwatch, loggingFormatter);
+			lResponse.Information("request/response");
 
 			return response;
 		}
@@ -56,9 +59,12 @@ public class LoggingHandler : DelegatingHandler
 		{
 			stopwatch.Stop();
 
-			l = l.ForContext(ex, loggingFormatter);
-			l = l.ForContext(stopwatch, loggingFormatter);
-			l.Information(ex, "request/exception");
+			ILogger lException = logger;
+			lException = await logger.ForContextAsync(request, loggingFormatter)
+				.ConfigureAwait(false);
+			lException = lException.ForContext(ex, loggingFormatter);
+			lException = lException.ForContext(stopwatch, loggingFormatter);
+			lException.Information(ex, "request/exception");
 
 			throw;
 		}
