@@ -210,7 +210,14 @@ public abstract class StatsAggregatorBase : IStatsAggregator
 				catch (Exception ex)
 				{
 					// swallow
-					onProcessingError?.Invoke(ex);
+					try
+					{
+						onProcessingError?.Invoke(ex);
+					}
+					catch
+					{
+						// swallow
+					}
 				}
 
 				timer?.Dispose();

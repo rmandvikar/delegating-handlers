@@ -456,4 +456,40 @@ public class MetricAggregatingHandlerTests
 
 		Assert.AreEqual(1, onErrorCount);
 	}
+
+	[Test]
+	public async Task Verify_OnError_If_Throws()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		Action<Exception> onError = (ex) =>
+		{
+			throw new Exception("boom!");
+		};
+		fixture.Register<Action<Exception>>(() => onError);
+		var intervalInSeconds = 1;
+		fixture.Register<IStatsAggregatorSettings>(() =>
+			new StatsAggregatorSettings
+			{
+				MetricName = "dep_metric_ms",
+				IntervalInSeconds = intervalInSeconds,
+			});
+		fixture.Register<IStatsCalculator>(() => fixture.Create<StatsCalculator>());
+		var statsAggregatorBaseMock = fixture.Create<Mock<StatsAggregatorBase>>();
+		statsAggregatorBaseMock.Protected()
+			.Setup(AggregateStatsMethodName)
+			.Callback(() => throw new Exception("boom!"));
+		fixture.Register<IStatsAggregator>(() => statsAggregatorBaseMock.Object);
+		var metricAggregatingHandler = fixture.Build<MetricAggregatingHandler>()
+			.Without(x => x.InnerHandler)
+			.Create();
+		using var http200 = new HttpResponseMessage(HttpStatusCode.OK);
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(http200);
+		using var invoker = HttpMessageInvokerFactory.Create(
+			metricAggregatingHandler, shortCircuitingCannedResponseHandler);
+
+		using var request = new HttpRequestMessage();
+		var _ = await invoker.SendAsync(request, CancellationToken.None);
+		invoker.Dispose();
+	}
 }
