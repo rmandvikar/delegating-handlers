@@ -440,7 +440,7 @@ public class MetricAggregatingHandlerTests
 		var statsAggregatorBaseMock = fixture.Create<Mock<StatsAggregatorBase>>();
 		statsAggregatorBaseMock.Protected()
 			.Setup(AggregateStatsMethodName)
-			.Callback(() => throw new Exception());
+			.Callback(() => throw new Exception("boom!"));
 		fixture.Register<IStatsAggregator>(() => statsAggregatorBaseMock.Object);
 		var metricAggregatingHandler = fixture.Build<MetricAggregatingHandler>()
 			.Without(x => x.InnerHandler)

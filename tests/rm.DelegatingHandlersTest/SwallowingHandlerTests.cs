@@ -33,7 +33,7 @@ public class SwallowingHandlerTests
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-		var exception = new Exception();
+		var exception = new Exception("boom!");
 		var throwingHandler = new ThrowingHandler(exception);
 		var swallowingHandler = new SwallowingHandler(
 			ex => ex is TurnDownForWhatException);
