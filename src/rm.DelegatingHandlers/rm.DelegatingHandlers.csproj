@@ -14,9 +14,14 @@
     <PackageTags>HttpClient;DelegatingHandler</PackageTags>
     <RepositoryUrl>https://github.com/rmandvikar/delegating-handlers</RepositoryUrl>
     <PackageProjectUrl>https://github.com/rmandvikar/delegating-handlers</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>hippy</Authors>
     <Company>hippy</Company>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="IsExternalInit" Version="1.0.3" />
     <PackageReference Include="K4os.Hash.xxHash" Version="1.0.7" />
