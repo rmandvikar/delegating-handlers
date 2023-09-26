@@ -51,6 +51,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandler : DelegatingHandle
 		HttpRequestMessage request,
 		CancellationToken cancellationToken)
 	{
+		Exception exception = null;
 		var tuple = await retryPolicy.ExecuteAsync(
 			action: async (context, ct) =>
 			{
@@ -61,13 +62,16 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandler : DelegatingHandle
 				request.Properties.Remove(RequestProperties.RetrySignal);
 				try
 				{
+					exception = null;
 					var response = await base.SendAsync(request, ct)
 						.ConfigureAwait(false);
 					return (request, response);
 				}
-				catch (Exception)
+				catch (Exception ex)
 					when (request.Properties.TryGetValue(RequestProperties.RetrySignal, out var retrySignaledObj) && (bool)retrySignaledObj)
 				{
+					// capture the exception to rethrow on last attempt
+					exception = ex;
 					// swallow if retry signaled on ex
 					return (request, null);
 				}
@@ -75,6 +79,10 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandler : DelegatingHandle
 			context: new Context(),
 			cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
+		if (exception != null)
+		{
+			throw exception;
+		}
 		return tuple.response;
 	}
 }

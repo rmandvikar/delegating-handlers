@@ -17,10 +17,8 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
 			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
 			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }, // NO retry
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }, // not used
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }  // not used
+			(request) => throw new TaskCanceledException("timeout!"),                    // retry
+			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }  // NO retry
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -44,6 +42,122 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 
 		Assert.AreEqual(3, retryAttempt);
+	}
+
+	[Test]
+	[TestCase(0)]
+	[TestCase(5)]
+	public void Retries_On_Signal_All_Attempts_In_Exception(int retryCount)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!")  // retry
+			);
+		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var retryHandler = new ExponentialBackoffWithJitterRetryOnSignalHandler(
+			new RetrySettings
+			{
+				RetryCount = retryCount,
+				RetryDelayInMilliseconds = 0,
+			});
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retrySignalingOnConditionHandler, shortCircuitingCannedActionsHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Assert.ThrowsAsync<TaskCanceledException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+		Assert.AreEqual(retryCount, retryAttempt);
+	}
+
+	[Test]
+	public void Retries_On_Signal_Last_Attempt_In_Exception()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
+			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
+			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!"), // retry
+			(request) => throw new TaskCanceledException("timeout!")  // last attempt
+			);
+		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var retryHandler = new ExponentialBackoffWithJitterRetryOnSignalHandler(
+			new RetrySettings
+			{
+				RetryCount = 5,
+				RetryDelayInMilliseconds = 0,
+			});
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retrySignalingOnConditionHandler, shortCircuitingCannedActionsHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Assert.ThrowsAsync<TaskCanceledException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+		Assert.AreEqual(5, retryAttempt);
+	}
+
+	[Test]
+	[TestCase(0)]
+	[TestCase(5)]
+	public void No_Retries_On_Signal_When_Unhandled_In_Exception(int retryCount)
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
+			(request) => throw new TurnDownForWhatException()         // unhandled
+			);
+		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
+		var retryAttempt = -1;
+		var delegateHandler = new DelegateHandler(
+			(request, ct) =>
+			{
+				retryAttempt++;
+				return Task.CompletedTask;
+			});
+		var retryHandler = new ExponentialBackoffWithJitterRetryOnSignalHandler(
+			new RetrySettings
+			{
+				RetryCount = retryCount,
+				RetryDelayInMilliseconds = 0,
+			});
+
+		using var invoker = HttpMessageInvokerFactory.Create(
+			retryHandler, delegateHandler, retrySignalingOnConditionHandler, shortCircuitingCannedActionsHandler);
+
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
+		{
+			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
+		});
+		Assert.AreEqual(0, retryAttempt);
 	}
 
 	[Test]
