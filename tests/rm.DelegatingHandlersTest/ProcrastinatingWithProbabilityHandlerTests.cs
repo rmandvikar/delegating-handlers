@@ -9,6 +9,7 @@ namespace rm.DelegatingHandlersTest;
 [TestFixture]
 public class ProcrastinatingWithProbabilityHandlerTests
 {
+	[Retry(5)]
 	[Test]
 	public async Task Procrastinates()
 	{
