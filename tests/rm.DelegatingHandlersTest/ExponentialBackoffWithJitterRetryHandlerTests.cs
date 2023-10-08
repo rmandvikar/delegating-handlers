@@ -117,37 +117,7 @@ public class ExponentialBackoffWithJitterRetryHandlerTests
 	}
 
 	[Test]
-	public async Task When_0_Retries_PollyRetryAttempt_Property_Is_Not_Present()
-	{
-		var fixture = new Fixture().Customize(new AutoMoqCustomization());
-
-		var statusCode = (HttpStatusCode)542;
-		var content = fixture.Create<string>();
-		var shortCircuitingResponseHandler = new ShortCircuitingResponseHandler(
-			new ShortCircuitingResponseHandlerSettings
-			{
-				StatusCode = statusCode,
-				Content = content,
-			});
-		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
-			new RetrySettings
-			{
-				RetryCount = 0,
-				RetryDelayInMilliseconds = 0,
-			});
-
-		using var invoker = HttpMessageInvokerFactory.Create(
-			retryHandler, shortCircuitingResponseHandler);
-
-		using var requestMessage = fixture.Create<HttpRequestMessage>();
-		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
-
-#pragma warning disable CS0618 // Type or member is obsolete
-		Assert.IsFalse(requestMessage.Properties.ContainsKey(RequestProperties.PollyRetryAttempt));
-#pragma warning restore CS0618 // Type or member is obsolete
-	}
-
-	[Test]
+	[TestCase(0)]
 	[TestCase(1)]
 	[TestCase(2)]
 	public async Task When_N_Retries_PollyRetryAttempt_Property_Is_Present(int retryCount)

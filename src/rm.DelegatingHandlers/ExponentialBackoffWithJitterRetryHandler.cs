@@ -55,10 +55,8 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 		return await retryPolicy.ExecuteAsync(
 			action: async (context, ct) =>
 			{
-				if (context.TryGetValue(ContextKey.RetryAttempt, out var retryAttempt))
-				{
-					request.Properties[RequestProperties.PollyRetryAttempt] = retryAttempt;
-				}
+				var retryAttempt = context.TryGetValue(ContextKey.RetryAttempt, out var retryAttemptObj) ? retryAttemptObj : 0;
+				request.Properties[RequestProperties.PollyRetryAttempt] = retryAttempt;
 				return await base.SendAsync(request, ct)
 					.ConfigureAwait(false);
 			},
