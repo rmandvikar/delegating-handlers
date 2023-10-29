@@ -72,12 +72,13 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 			medianFirstRetryDelay: TimeSpan.FromMilliseconds(retrySettings.RetryDelayInMilliseconds),
 			retryCount: retrySettings.RetryCount).ToArray();
 		var context = new Context();
+		context[ContextKey.RetryAttempt] = 0;
 		context[ContextKey.SleepDurations] = sleepDurationsWithJitter;
 
 		var tuple = await retryPolicy.ExecuteAsync(
 			action: async (context, ct) =>
 			{
-				var retryAttempt = context.TryGetValue(ContextKey.RetryAttempt, out var retryAttemptObj) ? retryAttemptObj : 0;
+				var retryAttempt = (int)context[ContextKey.RetryAttempt];
 				request.Properties[RequestProperties.PollyRetryAttempt] = retryAttempt;
 				var response = await base.SendAsync(request, ct)
 					.ConfigureAwait(false);
@@ -104,7 +105,7 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 			return false;
 		}
 		// retryAttempt is 0-based
-		var retryAttempt = context.TryGetValue(ContextKey.RetryAttempt, out object retryAttemptObj) ? (int)retryAttemptObj : 0;
+		var retryAttempt = (int)context[ContextKey.RetryAttempt];
 		if (retryAttempt == sleepDurationsWithJitter.Count())
 		{
 			return false;
