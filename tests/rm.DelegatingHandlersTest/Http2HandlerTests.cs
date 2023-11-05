@@ -27,13 +27,14 @@ public class Http2HandlerTests
 			new HttpRequestMessage(method, uri);
 
 		var http2Handler = new Http2Handler();
-		var loggingHandler = new LoggingHandler(logger, new LoggingFormatter());
+		var loggingPostHandler = new LoggingPostHandler(logger, new LoggingFormatter());
+		var loggingPreHandler = new LoggingPreHandler(logger, new LoggingFormatter());
 
 		using var httpclient = HttpClientFactory.Create(
 #if NETFRAMEWORK
 			new WinHttpHandler(),
 #endif
-			http2Handler, loggingHandler);
+			loggingPostHandler, http2Handler, loggingPreHandler);
 
 		using var _ = await httpclient.SendAsync(request, CancellationToken.None);
 
@@ -43,7 +44,8 @@ public class Http2HandlerTests
 			;
 		InMemorySink.Instance.Should()
 			.HaveMessage("request/response").Appearing().Once()
-				.WithProperty($"response.Version").WithValue(version)
+				.WithProperty($"request.Version").WithValue(version)
+			.And.WithProperty($"response.Version").WithValue(version)
 			;
 	}
 }

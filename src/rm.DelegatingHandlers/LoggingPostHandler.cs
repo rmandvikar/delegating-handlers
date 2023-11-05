@@ -12,13 +12,13 @@ namespace rm.DelegatingHandlers;
 /// Logs <see cref="HttpRequestMessage"/>, and <see cref="HttpResponseMessage"/> with
 /// exception, if any, along with its elapsed time.
 /// </summary>
-public class LoggingHandler : DelegatingHandler
+public class LoggingPostHandler : DelegatingHandler
 {
 	private readonly ILogger logger;
 	private readonly ILoggingFormatter loggingFormatter;
 
-	/// <inheritdoc cref="LoggingHandler" />
-	public LoggingHandler(
+	/// <inheritdoc cref="LoggingPostHandler" />
+	public LoggingPostHandler(
 		ILogger logger,
 		ILoggingFormatter loggingFormatter)
 	{
@@ -32,11 +32,6 @@ public class LoggingHandler : DelegatingHandler
 		HttpRequestMessage request,
 		CancellationToken cancellationToken)
 	{
-		ILogger lRequest = logger;
-		lRequest = await lRequest.ForContextAsync(request, loggingFormatter)
-			.ConfigureAwait(false);
-		lRequest.Information("request/");
-
 		var stopwatch = Stopwatch.StartNew();
 		try
 		{
