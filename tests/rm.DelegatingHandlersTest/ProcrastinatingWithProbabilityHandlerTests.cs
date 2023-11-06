@@ -4,12 +4,15 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
+using rm.Random2;
 
 namespace rm.DelegatingHandlersTest;
 
 [TestFixture]
 public class ProcrastinatingWithProbabilityHandlerTests
 {
+	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+
 	[Retry(5)]
 	[Test]
 	public async Task Procrastinates()
@@ -22,7 +25,8 @@ public class ProcrastinatingWithProbabilityHandlerTests
 			{
 				ProbabilityPercentage = 100d,
 				DelayInMilliseconds = delayInMilliseconds,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), procrastinatingWithProbabilityHandler);
@@ -47,7 +51,8 @@ public class ProcrastinatingWithProbabilityHandlerTests
 			{
 				ProbabilityPercentage = 0d,
 				DelayInMilliseconds = delayInMilliseconds,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), procrastinatingWithProbabilityHandler);

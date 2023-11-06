@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using rm.FeatureToggle;
-using rm.Random2;
 
 namespace rm.DelegatingHandlers;
 
@@ -16,15 +15,19 @@ public class ShortCircuitingResponseWithProbabilityHandler : DelegatingHandler
 {
 	private readonly IShortCircuitingResponseWithProbabilityHandlerSettings shortCircuitingResponseWithProbabilityHandlerSettings;
 
-	private readonly IProbability probability = new Probability(rng);
-	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+	private readonly IProbability probability;
 
 	/// <inheritdoc cref="ShortCircuitingResponseWithProbabilityHandler" />
 	public ShortCircuitingResponseWithProbabilityHandler(
-		IShortCircuitingResponseWithProbabilityHandlerSettings shortCircuitingResponseWithProbabilityHandlerSettings)
+		IShortCircuitingResponseWithProbabilityHandlerSettings shortCircuitingResponseWithProbabilityHandlerSettings,
+		Random rng)
 	{
 		this.shortCircuitingResponseWithProbabilityHandlerSettings = shortCircuitingResponseWithProbabilityHandlerSettings
 			?? throw new ArgumentNullException(nameof(shortCircuitingResponseWithProbabilityHandlerSettings));
+		_ = rng
+			?? throw new ArgumentNullException(nameof(rng));
+
+		probability = new Probability(rng);
 	}
 
 	protected override Task<HttpResponseMessage> SendAsync(

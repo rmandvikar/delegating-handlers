@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using rm.FeatureToggle;
-using rm.Random2;
 
 namespace rm.DelegatingHandlers;
 
@@ -14,18 +13,22 @@ public class FaultWindowSignalingOnConditionHandler : DelegatingHandler
 {
 	private readonly IFaultWindowSignalingOnConditionHandlerSettings faultWindowSignalingOnConditionHandlerSettings;
 
-	private readonly IProbability probability = new Probability(rng);
-	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+	private readonly IProbability probability;
 
 	private readonly object locker = new object();
 	private DateTime? faultWindowEndTime = null;
 
 	/// <inheritdoc cref="FaultWindowSignalingOnConditionHandler" />
 	public FaultWindowSignalingOnConditionHandler(
-		IFaultWindowSignalingOnConditionHandlerSettings faultWindowSignalingOnConditionHandlerSettings)
+		IFaultWindowSignalingOnConditionHandlerSettings faultWindowSignalingOnConditionHandlerSettings,
+		Random rng)
 	{
 		this.faultWindowSignalingOnConditionHandlerSettings = faultWindowSignalingOnConditionHandlerSettings
 			?? throw new ArgumentNullException(nameof(faultWindowSignalingOnConditionHandlerSettings));
+		_ = rng
+			?? throw new ArgumentNullException(nameof(rng));
+
+		probability = new Probability(rng);
 	}
 
 	protected override Task<HttpResponseMessage> SendAsync(

@@ -5,12 +5,15 @@ using Moq;
 using NUnit.Framework;
 using rm.Clock;
 using rm.DelegatingHandlers;
+using rm.Random2;
 
 namespace rm.DelegatingHandlersTest;
 
 [TestFixture]
 public class ScenarioTests
 {
+	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+
 	[Test]
 	public void Retry_To_Fix_Infrequent_TaskCanceledException_Using_HttpMessageInvoker()
 	{
@@ -169,7 +172,8 @@ public class ScenarioTests
 				ProbabilityPercentage = 100d,
 				FaultDuration = TimeSpan.FromMilliseconds(10),
 				SignalProperty = typeof(ThrowingOnConditionHandler).FullName
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			faultWindowSignalingHandler, throwingOnConditionHandler);
@@ -193,7 +197,8 @@ public class ScenarioTests
 				ProbabilityPercentage = 100d,
 				FaultDuration = TimeSpan.FromMilliseconds(10),
 				SignalProperty = typeof(ThrowingOnConditionHandler).FullName
-			});
+			},
+			rng);
 		var faultOnConditionHandler = new FaultOnConditionHandler();
 
 		using var invoker = HttpMessageInvokerFactory.Create(

@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using rm.Extensions;
-using rm.Random2;
 
 namespace rm.DelegatingHandlers;
 
@@ -17,14 +16,17 @@ public class ProcrastinatingGaussianHandler : DelegatingHandler
 {
 	private readonly double mu;
 	private readonly double sigma;
-	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+	private readonly Random rng;
 
 	/// <inheritdoc cref="ProcrastinatingGaussianHandler" />
 	public ProcrastinatingGaussianHandler(
-		IProcrastinatingGaussianHandlerSettings procrastinatingGaussianHandlerSettings)
+		IProcrastinatingGaussianHandlerSettings procrastinatingGaussianHandlerSettings,
+		Random rng)
 	{
 		_ = procrastinatingGaussianHandlerSettings
 			?? throw new ArgumentNullException(nameof(procrastinatingGaussianHandlerSettings));
+		this.rng = rng
+			?? throw new ArgumentNullException(nameof(rng));
 
 		mu = procrastinatingGaussianHandlerSettings.Mu;
 		sigma = procrastinatingGaussianHandlerSettings.Sigma;

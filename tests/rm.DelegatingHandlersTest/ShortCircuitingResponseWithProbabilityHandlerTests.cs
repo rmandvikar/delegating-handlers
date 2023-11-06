@@ -4,12 +4,15 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
+using rm.Random2;
 
 namespace rm.DelegatingHandlersTest;
 
 [TestFixture]
 public class ShortCircuitingResponseWithProbabilityHandlerTests
 {
+	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+
 	[Test]
 	public async Task ShortCircuits()
 	{
@@ -23,7 +26,8 @@ public class ShortCircuitingResponseWithProbabilityHandlerTests
 				ProbabilityPercentage = 100d,
 				StatusCode = statusCode,
 				Content = content,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			shortCircuitingResponseWithProbabilityHandler);
@@ -49,7 +53,8 @@ public class ShortCircuitingResponseWithProbabilityHandlerTests
 				ProbabilityPercentage = 0d,
 				StatusCode = statusCode,
 				Content = content,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), shortCircuitingResponseWithProbabilityHandler);

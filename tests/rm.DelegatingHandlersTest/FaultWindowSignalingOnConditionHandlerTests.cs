@@ -3,12 +3,15 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
+using rm.Random2;
 
 namespace rm.DelegatingHandlersTest;
 
 [TestFixture]
 public class FaultWindowSignalingOnConditionHandlerTests
 {
+	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+
 	[Test]
 	public async Task Signals_Fault()
 	{
@@ -21,7 +24,8 @@ public class FaultWindowSignalingOnConditionHandlerTests
 				ProbabilityPercentage = 100d,
 				FaultDuration = TimeSpan.FromMilliseconds(10),
 				SignalProperty = triggerProperty,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), faultWindowSignalingOnConditionHandler);
@@ -49,7 +53,8 @@ public class FaultWindowSignalingOnConditionHandlerTests
 				ProbabilityPercentage = 100d,
 				FaultDuration = TimeSpan.FromMilliseconds(10),
 				SignalProperty = triggerProperty,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), faultWindowSignalingOnConditionHandler);
@@ -74,7 +79,8 @@ public class FaultWindowSignalingOnConditionHandlerTests
 				ProbabilityPercentage = 0d,
 				FaultDuration = TimeSpan.FromMilliseconds(10),
 				SignalProperty = triggerProperty,
-			});
+			},
+			rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), faultWindowSignalingOnConditionHandler);

@@ -3,18 +3,21 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
+using rm.Random2;
 
 namespace rm.DelegatingHandlersTest;
 
 [TestFixture]
 public class ThrowingWithProbabilityHandlerTests
 {
+	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+
 	[Test]
 	public void Throws()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException());
+		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(100d, new TurnDownForWhatException(), rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			throwingWithProbabilityHandler);
@@ -31,7 +34,7 @@ public class ThrowingWithProbabilityHandlerTests
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(0d, new TurnDownForWhatException());
+		var throwingWithProbabilityHandler = new ThrowingWithProbabilityHandler(0d, new TurnDownForWhatException(), rng);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), throwingWithProbabilityHandler);

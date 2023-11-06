@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using rm.FeatureToggle;
-using rm.Random2;
 
 namespace rm.DelegatingHandlers;
 
@@ -14,15 +13,19 @@ public class ProcrastinatingWithProbabilityHandler : DelegatingHandler
 {
 	private readonly IProcrastinatingWithProbabilityHandlerSettings procrastinatingWithProbabilityHandlerSettings;
 
-	private readonly IProbability probability = new Probability(rng);
-	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
+	private readonly IProbability probability;
 
 	/// <inheritdoc cref="ProcrastinatingWithProbabilityHandler" />
 	public ProcrastinatingWithProbabilityHandler(
-		IProcrastinatingWithProbabilityHandlerSettings procrastinatingWithProbabilityHandlerSettings)
+		IProcrastinatingWithProbabilityHandlerSettings procrastinatingWithProbabilityHandlerSettings,
+		Random rng)
 	{
 		this.procrastinatingWithProbabilityHandlerSettings = procrastinatingWithProbabilityHandlerSettings
 			?? throw new ArgumentNullException(nameof(procrastinatingWithProbabilityHandlerSettings));
+		_ = rng
+			?? throw new ArgumentNullException(nameof(rng));
+
+		probability = new Probability(rng);
 	}
 
 	protected override async Task<HttpResponseMessage> SendAsync(
