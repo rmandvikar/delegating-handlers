@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Http;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;

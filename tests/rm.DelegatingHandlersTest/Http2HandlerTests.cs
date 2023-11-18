@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Net.Http;
+using NUnit.Framework;
 using rm.DelegatingHandlers;
 using rm.DelegatingHandlers.Formatting;
 using Serilog;

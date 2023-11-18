@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System.Net.Http;
+using AutoFixture;
 using AutoFixture.AutoMoq;
 using Moq;
 using NUnit.Framework;

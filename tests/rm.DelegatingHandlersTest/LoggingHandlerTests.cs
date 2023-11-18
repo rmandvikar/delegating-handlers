@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http;
 using System.Text;
 using AutoFixture.AutoMoq;
 using AutoFixture;

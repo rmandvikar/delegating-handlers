@@ -1,8 +1,8 @@
 ﻿using System.Net;
+using System.Net.Http;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Moq;
-using Moq.Protected;
 using NUnit.Framework;
 using rm.DelegatingHandlers;
 

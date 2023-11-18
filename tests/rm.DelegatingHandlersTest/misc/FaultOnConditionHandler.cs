@@ -1,4 +1,5 @@
-﻿using rm.DelegatingHandlers;
+﻿using System.Net.Http;
+using rm.DelegatingHandlers;
 
 namespace rm.DelegatingHandlersTest;
 

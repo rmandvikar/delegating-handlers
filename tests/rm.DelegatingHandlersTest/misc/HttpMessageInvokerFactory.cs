@@ -1,3 +1,4 @@
+using System.Net.Http;
 namespace rm.DelegatingHandlersTest;
 
 public static class HttpMessageInvokerFactory
