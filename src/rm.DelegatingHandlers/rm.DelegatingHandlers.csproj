@@ -8,7 +8,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <NoWarn>$(NoWarn);1591;NU1507</NoWarn>
     <LangVersion>latest</LangVersion>
     <Description>Provides DelegatingHandlers.</Description>
     <PackageTags>HttpClient;DelegatingHandler</PackageTags>
@@ -25,15 +25,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IsExternalInit" Version="1.0.3" />
-    <PackageReference Include="K4os.Hash.xxHash" Version="1.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.1.6" />
-    <PackageReference Include="Polly" Version="7.2.2" />
-    <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageReference Include="rm.Clock" Version="1.0.1" />
-    <PackageReference Include="rm.Extensions" Version="2.8.2" />
-    <PackageReference Include="rm.FeatureToggle" Version="1.1.2" />
-    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="IsExternalInit" />
+    <PackageReference Include="K4os.Hash.xxHash" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+    <PackageReference Include="rm.Clock" />
+    <PackageReference Include="rm.Extensions" />
+    <PackageReference Include="rm.FeatureToggle" />
+    <PackageReference Include="Serilog" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="$(AssemblyName)Test" />
