@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Moq;
@@ -209,5 +210,57 @@ public class ScenarioTests
 		{
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 		});
+	}
+
+	[Test]
+	public async Task Showcase_Response_Dispose_And_Content_Dispose_Discrepancy()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+
+		var cannedResponse = new HttpResponseMessage() { StatusCode = (HttpStatusCode)500, Content = new StringContent("yawn!") };
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(cannedResponse);
+		using var httpClient = HttpClientFactory.Create(
+			shortCircuitingCannedResponseHandler);
+		using var requestMessage = fixture.Create<HttpRequestMessage>();
+		using var responseMessage = await httpClient.SendAsync(requestMessage);
+#if NETFRAMEWORK
+		try
+		{
+			responseMessage.EnsureSuccessStatusCode();
+		}
+		catch (Exception)
+		{
+			if (responseMessage.Content == null)
+			{
+				// oops!
+			}
+			else
+			{
+				Assert.ThrowsAsync<ObjectDisposedException>(async () =>
+				{
+					var content = await responseMessage.Content.ReadAsStringAsync();
+				});
+			}
+		}
+#else
+		try
+		{
+			responseMessage.EnsureSuccessStatusCode();
+		}
+		catch (Exception)
+		{
+			if (responseMessage.Content == null)
+			{
+				// oops!
+			}
+			else
+			{
+				Assert.DoesNotThrowAsync(async () =>
+				{
+					var content = await responseMessage.Content.ReadAsStringAsync();
+				});
+			}
+		}
+#endif
 	}
 }
