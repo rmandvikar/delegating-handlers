@@ -17,10 +17,10 @@
     <PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageVersion Include="Polly" Version="7.2.2" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="rm.Clock" Version="1.0.1" />
+    <PackageVersion Include="rm.Clock" Version="1.1.0" />
     <PackageVersion Include="rm.Extensions" Version="2.8.2" />
     <PackageVersion Include="rm.FeatureToggle" Version="1.1.2" />
-    <PackageVersion Include="rm.Random2" Version="3.0.4" />
+    <PackageVersion Include="rm.Random2" Version="3.0.5" />
     <PackageVersion Include="Serilog" Version="2.7.1" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="1.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
