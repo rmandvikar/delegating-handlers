@@ -127,7 +127,7 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 					&& !string.IsNullOrWhiteSpace(retryAfterValue);
 
 #if DEBUG
-				Console.WriteLine($"retryAfterValue: {retryAfterValue}");
+				//Console.WriteLine($"retryAfterValue: {retryAfterValue}");
 #endif
 
 				// retry on 503, 429 only on valid retry-after value
@@ -167,8 +167,8 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 		}
 
 #if DEBUG
-		Console.WriteLine($"sleepDurationWithJitter: {sleepDurationWithJitter}");
-		Console.WriteLine($"retry: {retry}");
+		//Console.WriteLine($"sleepDurationWithJitter: {sleepDurationWithJitter}");
+		//Console.WriteLine($"retry: {retry}");
 #endif
 
 		return retry;
