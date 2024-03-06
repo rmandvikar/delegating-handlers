@@ -34,6 +34,9 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 	private readonly IRetrySettings retrySettings;
 	private readonly ISystemClock clock;
 
+	private long callsCount;
+	private long retryCallsCount;
+
 	/// <inheritdoc cref="ExponentialBackoffWithJitterRetryHandler" />
 	public ExponentialBackoffWithJitterRetryHandler(
 		IRetrySettings retrySettings,
@@ -75,18 +78,58 @@ public class ExponentialBackoffWithJitterRetryHandler : DelegatingHandler
 		context[ContextKey.RetryAttempt] = 0;
 		context[ContextKey.SleepDurations] = sleepDurationsWithJitter;
 
+		Interlocked.Increment(ref callsCount);
+
 		var tuple = await retryPolicy.ExecuteAsync(
 			action: async (context, ct) =>
 			{
 				var retryAttempt = (int)context[ContextKey.RetryAttempt];
 				request.Properties[RequestProperties.PollyRetryAttempt] = retryAttempt;
+
+				long retryCalls;
+				if (retryAttempt >= 1)
+				{
+					retryCalls = Interlocked.Increment(ref retryCallsCount);
+				}
+				else
+				{
+					retryCalls = Interlocked.Read(ref retryCallsCount);
+				}
+				var calls = Interlocked.Read(ref callsCount);
+#if DEBUG
+				Console.WriteLine($"retryCalls: {retryCallsCount}, callsCount: {callsCount}");
+#endif
+				double retryCallsPercentage = 0;
+				if (retryAttempt >= 1)
+				{
+					if (calls > 0
+						//&& calls > 2
+						&& (retryCallsPercentage = ((double)retryCalls / (double)calls * 100)) > retrySettings.RetryCallsPercentageThreshold)
+					{
+						throw new TokenBucketRetryException(
+							$"retryCallsPercentage (threshold): {retrySettings.RetryCallsPercentageThreshold}, but was retryCallsPercentage: {retryCallsPercentage}");
+					}
+				}
+#if DEBUG
+				Console.WriteLine($"retryAttempt: {retryAttempt}. retryCallsPercentage (threshold): {retrySettings.RetryCallsPercentageThreshold}, but was retryCallsPercentage: {retryCallsPercentage}");
+#endif
+
 				var response = await base.SendAsync(request, ct)
 					.ConfigureAwait(false);
+
+				if (retryAttempt >= 1)
+				{
+					Interlocked.Decrement(ref retryCallsCount);
+				}
+
 				return (response, context);
 			},
 			context: context,
 			cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
+
+		Interlocked.Decrement(ref callsCount);
+
 		return tuple.response;
 	}
 
@@ -179,12 +222,14 @@ public interface IRetrySettings
 {
 	int RetryCount { get; }
 	int RetryDelayInMilliseconds { get; }
+	double RetryCallsPercentageThreshold { get; }
 }
 
 public record class RetrySettings : IRetrySettings
 {
 	public int RetryCount { get; init; }
 	public int RetryDelayInMilliseconds { get; init; }
+	public double RetryCallsPercentageThreshold { get; init; }
 }
 
 internal static class ContextKey

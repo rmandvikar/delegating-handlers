@@ -27,11 +27,6 @@ public class TokenBucketRetryHandlerTests
 				StatusCode = (HttpStatusCode)500,
 				Content = content,
 			});
-		var tokenBucketRetryHandler = new TokenBucketRetryHandler(
-			new TokenBucketRetryHandlerSettings
-			{
-				Percentage = 0.10d,
-			});
 		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
 		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
@@ -39,11 +34,12 @@ public class TokenBucketRetryHandlerTests
 			{
 				RetryCount = 2,
 				RetryDelayInMilliseconds = 0,
+				RetryCallsPercentageThreshold = 10.00d,
 			},
 			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
-			retryHandler, tokenBucketRetryHandler, shortCircuitingResponseHandler);
+			retryHandler, shortCircuitingResponseHandler);
 
 		using var requestMessage = fixture.Create<HttpRequestMessage>();
 		var ex = Assert.ThrowsAsync<TokenBucketRetryException>(async () =>
@@ -65,11 +61,6 @@ public class TokenBucketRetryHandlerTests
 				StatusCode = (HttpStatusCode)200,
 				Content = content,
 			});
-		var tokenBucketRetryHandler = new TokenBucketRetryHandler(
-			new TokenBucketRetryHandlerSettings
-			{
-				Percentage = 0.10d,
-			});
 		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
 		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
@@ -77,11 +68,12 @@ public class TokenBucketRetryHandlerTests
 			{
 				RetryCount = 2,
 				RetryDelayInMilliseconds = 0,
+				RetryCallsPercentageThreshold = 10.00d,
 			},
 			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
-			retryHandler, tokenBucketRetryHandler, shortCircuitingResponseHandler);
+			retryHandler, shortCircuitingResponseHandler);
 
 		using var requestMessage = fixture.Create<HttpRequestMessage>();
 		using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
@@ -100,11 +92,6 @@ public class TokenBucketRetryHandlerTests
 				StatusCode = (HttpStatusCode)200,
 				Content = content,
 			});
-		var tokenBucketRetryHandler = new TokenBucketRetryHandler(
-			new TokenBucketRetryHandlerSettings
-			{
-				Percentage = 0.05d,
-			});
 		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
 		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
@@ -112,11 +99,12 @@ public class TokenBucketRetryHandlerTests
 			{
 				RetryCount = 2,
 				RetryDelayInMilliseconds = 0,
+				RetryCallsPercentageThreshold = 10.00d,
 			},
 			clockMock.Object);
 
 		using var invoker = HttpMessageInvokerFactory.Create(
-			retryHandler, tokenBucketRetryHandler, shortCircuitingResponseHandler);
+			retryHandler, shortCircuitingResponseHandler);
 
 		const int iterations = 1_000;
 		for (int i = 0; i < iterations; i++)
@@ -138,19 +126,21 @@ public class TokenBucketRetryHandlerTests
 				StatusCode = (HttpStatusCode)200,
 				Content = fixture.Create<string>(),
 			});
+		var procrastinatingWithProbabilityHandler = new ProcrastinatingGaussianHandler(
+			new ProcrastinatingGaussianHandlerSettings
+			{
+				Mu = 10,
+				Sigma = 50,
+			},
+			rng);
 		var shortCircuitingResponseWithProbabilityHandler = new ShortCircuitingResponseWithProbabilityHandler(
 			new ShortCircuitingResponseWithProbabilityHandlerSettings
 			{
-				ProbabilityPercentage = 0.1d,
+				ProbabilityPercentage = 40.00d,
 				StatusCode = (HttpStatusCode)500,
 				Content = fixture.Create<string>(),
 			},
 			rng);
-		var tokenBucketRetryHandler = new TokenBucketRetryHandler(
-			new TokenBucketRetryHandlerSettings
-			{
-				Percentage = 0.10d,
-			});
 		var clockMock = fixture.Freeze<Mock<ISystemClock>>();
 		clockMock.Setup(x => x.UtcNow).Returns(DateTimeOffsetValues.Chernobyl);
 		var retryHandler = new ExponentialBackoffWithJitterRetryHandler(
@@ -158,11 +148,11 @@ public class TokenBucketRetryHandlerTests
 			{
 				RetryCount = 2,
 				RetryDelayInMilliseconds = 0,
+				RetryCallsPercentageThreshold = 10.00d,
 			},
 			clockMock.Object);
-
 		using var invoker = HttpMessageInvokerFactory.Create(
-			retryHandler, tokenBucketRetryHandler, shortCircuitingResponseWithProbabilityHandler, shortCircuitingResponseHandler);
+			retryHandler, procrastinatingWithProbabilityHandler, shortCircuitingResponseWithProbabilityHandler, shortCircuitingResponseHandler);
 
 		const int iterations = 1_000;
 		const int batchSize = 100;
