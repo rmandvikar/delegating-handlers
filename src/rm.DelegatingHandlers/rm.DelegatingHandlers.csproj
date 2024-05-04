@@ -10,6 +10,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NU1507</NoWarn>
     <LangVersion>latest</LangVersion>
+    <PackageId>rmandvikar.DelegatingHandlers</PackageId>
     <Description>Provides DelegatingHandlers.</Description>
     <PackageTags>HttpClient;DelegatingHandler</PackageTags>
     <RepositoryUrl>https://github.com/rmandvikar/delegating-handlers</RepositoryUrl>
@@ -30,9 +31,9 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" />
-    <PackageReference Include="rm.Clock" />
-    <PackageReference Include="rm.Extensions" />
-    <PackageReference Include="rm.FeatureToggle" />
+    <PackageReference Include="rmandvikar.Clock" />
+    <PackageReference Include="rmandvikar.Extensions" />
+    <PackageReference Include="rmandvikar.FeatureToggle" />
     <PackageReference Include="Serilog" />
   </ItemGroup>
   <ItemGroup>
