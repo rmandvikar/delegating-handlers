@@ -28,7 +28,7 @@ public class LoggingPreHandlerTests
 			var version = "2.0";
 			var method = HttpMethod.Post;
 			var uri = "/health";
-			var requestContent = "woot?!";
+			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
 			var mimeType = MediaTypeNames.Application.Json;
 			var header1 = "header1";

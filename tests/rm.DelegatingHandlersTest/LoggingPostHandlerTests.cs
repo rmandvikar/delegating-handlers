@@ -38,8 +38,8 @@ public class LoggingPostHandlerTests
 			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
-			var requestContent = "woot?!";
-			var responseContent = "woot!!1";
+			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
+			var responseContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
 			var mimeType = MediaTypeNames.Application.Json;
 			var header1 = "header1";
@@ -140,8 +140,8 @@ public class LoggingPostHandlerTests
 			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
-			var requestContent = "woot?!";
-			var responseContent = "woot!!1";
+			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
+			var responseContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
 			var mimeType = MediaTypeNames.Application.Json;
 			var header1 = "header1";
@@ -217,8 +217,8 @@ public class LoggingPostHandlerTests
 			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
-			var requestContent = "woot?!";
-			var responseContent = "woot!!1";
+			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
+			var responseContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
 			var mimeType = MediaTypeNames.Application.Json;
 			var header1 = "header1";
@@ -308,8 +308,8 @@ public class LoggingPostHandlerTests
 			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
-			var requestContent = "woot?!";
-			var responseContent = "woot!!1";
+			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
+			var responseContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
 			var mimeType = MediaTypeNames.Application.Json;
 			var header1 = "header1";
