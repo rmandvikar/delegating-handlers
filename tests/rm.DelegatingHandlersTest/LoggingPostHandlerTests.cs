@@ -229,6 +229,8 @@ public class LoggingPostHandlerTests
 			var propertyValue1 = "propertyValue1";
 			var property2 = "property02";
 			var propertyValue2 = "propertyValue02";
+			var property3 = "property03";
+			var propertyValue3 = "propertyValue03";
 			using var request =
 				new HttpRequestMessage(method, uri)
 				{
@@ -256,10 +258,18 @@ public class LoggingPostHandlerTests
 #endif
 
 			var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(response);
+			var delegateHandler = new DelegateHandler(
+				postDelegate: (request, response, ct) =>
+				{
+#pragma warning disable CS0618 // Type or member is obsolete
+					request.Properties.Add(property3, propertyValue3);
+#pragma warning restore CS0618 // Type or member is obsolete
+					return Task.FromResult(response);
+				});
 			var loggingPostHandler = new LoggingPostHandler(logger, new CompactLoggingFormatter());
 
 			using var invoker = HttpMessageInvokerFactory.Create(
-				loggingPostHandler, shortCircuitingCannedResponseHandler);
+				loggingPostHandler, delegateHandler, shortCircuitingCannedResponseHandler);
 
 			using var _ = await invoker.SendAsync(request, CancellationToken.None);
 
@@ -278,6 +288,7 @@ public class LoggingPostHandlerTests
 				.And.WithProperty($"rq.c").WithValue(requestContent)
 				.And.WithProperty($"rq.p.{property1}").WithValue(propertyValue1)
 				.And.WithProperty($"rq.p.{property2}").WithValue(propertyValue2)
+				.And.WithProperty($"rq.p.{property3}").WithValue(propertyValue3)
 				.And.WithProperty($"rs.v").WithValue(version)
 				.And.WithProperty($"rs.s").WithValue((int)statusCode)
 				.And.WithProperty($"rs.r").WithValue(statusCode.ToString())
