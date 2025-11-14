@@ -19,7 +19,7 @@ public class CorrelationIdHandlerTests
 		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
 		var correlationId = "boom!";
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(correlationId);
+		correlationIdContextMock.Setup(x => x.Values).Returns(correlationId);
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, shortCircuitingCannedResponseHandler);
@@ -41,7 +41,7 @@ public class CorrelationIdHandlerTests
 		var correlationId1 = "boom1!";
 		var correlationId2 = "boom2!";
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(new StringValues(new[] { correlationId1, correlationId2, }));
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new[] { correlationId1, correlationId2, }));
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, shortCircuitingCannedResponseHandler);
@@ -57,12 +57,48 @@ public class CorrelationIdHandlerTests
 	}
 
 	[Test]
+	public void Throws_If_CorrelationId_Values_Is_Null()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
+		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
+		correlationIdContextMock.Setup(x => x.Values).Returns((string)null!);
+		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
+		using var invoker = HttpMessageInvokerFactory.Create(
+			correlationIdHandler, shortCircuitingCannedResponseHandler);
+		using var request = new HttpRequestMessage();
+
+		Assert.ThrowsAsync<InvalidOperationException>(async () =>
+		{
+			using var response = await invoker.SendAsync(request, CancellationToken.None);
+		});
+	}
+
+	[Test]
+	public void Throws_If_CorrelationId_Values_Is_Empty()
+	{
+		var fixture = new Fixture().Customize(new AutoMoqCustomization());
+		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
+		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new string[] { }));
+		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
+		using var invoker = HttpMessageInvokerFactory.Create(
+			correlationIdHandler, shortCircuitingCannedResponseHandler);
+		using var request = new HttpRequestMessage();
+
+		Assert.ThrowsAsync<InvalidOperationException>(async () =>
+		{
+			using var response = await invoker.SendAsync(request, CancellationToken.None);
+		});
+	}
+
+	[Test]
 	public void Throws_If_CorrelationId_Values_Is_Null_Value()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(new StringValues(new string[] { null!, }));
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new string[] { null!, }));
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, shortCircuitingCannedResponseHandler);
@@ -80,7 +116,7 @@ public class CorrelationIdHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(new StringValues(new string[] { }));
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new string[] { "" }));
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, shortCircuitingCannedResponseHandler);
@@ -98,7 +134,7 @@ public class CorrelationIdHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 		var shortCircuitingCannedResponseHandler = new ShortCircuitingCannedResponseHandler(new HttpResponseMessage(HttpStatusCode.OK));
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(new StringValues(new string[] { "" }));
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new string[] { " " }));
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, shortCircuitingCannedResponseHandler);
@@ -119,7 +155,7 @@ public class CorrelationIdHandlerTests
 		var addsCorrelationIdToResponseHandler = new AddsCorrelationIdToResponseHandler(correlationIdAlreadyPresent);
 		var correlationId = "boom!";
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(correlationId);
+		correlationIdContextMock.Setup(x => x.Values).Returns(correlationId);
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, addsCorrelationIdToResponseHandler, shortCircuitingCannedResponseHandler);
@@ -140,7 +176,7 @@ public class CorrelationIdHandlerTests
 		var addsCorrelationIdToResponseHandler = new AddsCorrelationIdToResponseHandler(correlationIdAlreadyPresent);
 		var correlationId = "boom!";
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(correlationId);
+		correlationIdContextMock.Setup(x => x.Values).Returns(correlationId);
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 		using var invoker = HttpMessageInvokerFactory.Create(
 			correlationIdHandler, addsCorrelationIdToResponseHandler, shortCircuitingCannedResponseHandler);
@@ -162,7 +198,7 @@ public class CorrelationIdHandlerTests
 		var correlationId1 = "boom1!";
 		var correlationId2 = "boom2!";
 		var correlationIdContextMock = fixture.Freeze<Mock<ICorrelationIdContext>>();
-		correlationIdContextMock.Setup(x => x.GetValue()).Returns(new StringValues(new[] { correlationId1, correlationId2, }));
+		correlationIdContextMock.Setup(x => x.Values).Returns(new StringValues(new[] { correlationId1, correlationId2, }));
 		var correlationIdHandler = fixture.Create<CorrelationIdHandler>();
 
 		using var invoker = HttpMessageInvokerFactory.Create(

@@ -33,13 +33,13 @@ public class CorrelationIdHandler : DelegatingHandler
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header already present with value '{value}'");
 		}
 
-		var correlationIds = correlationIdContext.GetValue();
+		var correlationIds = correlationIdContext.Values;
 
-		if (correlationIds.Any(c => c.IsNullOrWhiteSpace()))
+		if (correlationIds?.Any(c => c.IsNullOrWhiteSpace()) ?? true)
 		{
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header values cannot contain null/empty/whitespace value");
 		}
-		if (correlationIds.IsNullOrEmpty())
+		if (correlationIds?.IsNullOrEmpty() ?? true)
 		{
 			throw new InvalidOperationException($"{RequestHeaders.CorrelationId} header value cannot be null/empty/whitespace");
 		}
@@ -74,7 +74,7 @@ public class CorrelationIdHandler : DelegatingHandler
 public interface ICorrelationIdContext
 {
 	/// <summary>
-	/// Returns correlationId value.
+	/// Returns correlationId values.
 	/// </summary>
-	StringValues GetValue();
+	StringValues? Values { get; set; }
 }
