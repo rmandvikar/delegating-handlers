@@ -59,7 +59,6 @@ public record class TimeoutHandlerSettings : ITimeoutHandlerSettings
 	public int TimeoutInMilliseconds { get; init; }
 }
 
-[Serializable]
 public class TimeoutExpiredException : TaskCanceledException
 {
 	private const string cannedMessage = "Timeout expired";
@@ -69,7 +68,4 @@ public class TimeoutExpiredException : TaskCanceledException
 	public TimeoutExpiredException(Task task) : base(task) { }
 	public TimeoutExpiredException(string message, Exception inner) : base(message, inner) { }
 	public TimeoutExpiredException(Exception inner) : base(cannedMessage, inner) { }
-	protected TimeoutExpiredException(
-		System.Runtime.Serialization.SerializationInfo info,
-		System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 }
