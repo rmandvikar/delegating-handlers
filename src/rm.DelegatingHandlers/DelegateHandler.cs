@@ -33,7 +33,8 @@ public class DelegateHandler : DelegatingHandler
 				.ConfigureAwait(false);
 		}
 
-		var response = await base.SendAsync(request, cancellationToken);
+		var response = await base.SendAsync(request, cancellationToken)
+			.ConfigureAwait(false);
 
 		if (postDelegate != null)
 		{
