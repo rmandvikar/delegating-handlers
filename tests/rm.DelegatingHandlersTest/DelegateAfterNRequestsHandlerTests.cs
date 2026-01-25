@@ -21,15 +21,13 @@ public class DelegateAfterNRequestsHandlerTests
 			new DelegateAfterNRequestsHandlerSettings
 			{
 				N = n,
-				PreDelegate = (request) =>
+				PreDelegate = async (request, ct) =>
 				{
 					preDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
-				PostDelegate = (request, response) =>
+				PostDelegate = async (request, response, ct) =>
 				{
 					postDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
 			});
 
@@ -40,7 +38,7 @@ public class DelegateAfterNRequestsHandlerTests
 		{
 			using var _ = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
 		}
-		using var __ = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
+		using var _1 = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
 
 		Assert.AreEqual(1, preDelegateExecutedCount);
 		Assert.AreEqual(1, postDelegateExecutedCount);
@@ -58,26 +56,25 @@ public class DelegateAfterNRequestsHandlerTests
 			new DelegateAfterNRequestsHandlerSettings
 			{
 				N = n,
-				PreDelegate = (request) =>
+				PreDelegate = async (request, ct) =>
 				{
 					preDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
-				PostDelegate = (request, response) =>
+				PostDelegate = async (request, response, ct) =>
 				{
 					postDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
 			});
 
 		using var invoker = HttpMessageInvokerFactory.Create(
 			fixture.Create<HttpMessageHandler>(), delegateAfterNRequestsHandler);
 
-		for (int i = 0; i < n + 1; i++)
+		for (int i = 0; i < n; i++)
 		{
 			using var _ = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
 		}
-		using var __ = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
+		using var _1 = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
+		using var _2 = await invoker.SendAsync(fixture.Create<HttpRequestMessage>(), CancellationToken.None);
 
 		Assert.AreEqual(2, preDelegateExecutedCount);
 		Assert.AreEqual(2, postDelegateExecutedCount);
@@ -95,15 +92,13 @@ public class DelegateAfterNRequestsHandlerTests
 			new DelegateAfterNRequestsHandlerSettings
 			{
 				N = n,
-				PreDelegate = (request) =>
+				PreDelegate = async (request, ct) =>
 				{
 					preDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
-				PostDelegate = (request, response) =>
+				PostDelegate = async (request, response, ct) =>
 				{
 					postDelegateExecutedCount++;
-					return Task.CompletedTask;
 				},
 			});
 

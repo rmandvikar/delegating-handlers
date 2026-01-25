@@ -30,7 +30,7 @@ public class DelegateAfterNRequestsHandler : DelegatingHandler
 		var thresholdMet = nValue >= delegateAfterNRequestsHandlerSettings.N;
 		if (thresholdMet)
 		{
-			await delegateAfterNRequestsHandlerSettings.PreDelegate(request)
+			await delegateAfterNRequestsHandlerSettings.PreDelegate(request, cancellationToken)
 				.ConfigureAwait(false);
 		}
 
@@ -39,7 +39,7 @@ public class DelegateAfterNRequestsHandler : DelegatingHandler
 
 		if (thresholdMet)
 		{
-			await delegateAfterNRequestsHandlerSettings.PostDelegate(request, response)
+			await delegateAfterNRequestsHandlerSettings.PostDelegate(request, response, cancellationToken)
 				.ConfigureAwait(false);
 		}
 
@@ -55,13 +55,13 @@ public class DelegateAfterNRequestsHandler : DelegatingHandler
 public interface IDelegateAfterNRequestsHandlerSettings
 {
 	long N { get; }
-	Func<HttpRequestMessage, Task> PreDelegate { get; }
-	Func<HttpRequestMessage, HttpResponseMessage, Task> PostDelegate { get; }
+	Func<HttpRequestMessage, CancellationToken, Task> PreDelegate { get; }
+	Func<HttpRequestMessage, HttpResponseMessage, CancellationToken, Task> PostDelegate { get; }
 }
 
 public record class DelegateAfterNRequestsHandlerSettings : IDelegateAfterNRequestsHandlerSettings
 {
 	public long N { get; init; }
-	public Func<HttpRequestMessage, Task> PreDelegate { get; init; }
-	public Func<HttpRequestMessage, HttpResponseMessage, Task> PostDelegate { get; init; }
+	public Func<HttpRequestMessage, CancellationToken, Task> PreDelegate { get; init; }
+	public Func<HttpRequestMessage, HttpResponseMessage, CancellationToken, Task> PostDelegate { get; init; }
 }
