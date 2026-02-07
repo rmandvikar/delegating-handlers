@@ -15,7 +15,13 @@ public class ShortCircuitingCannedActionsHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var cannedResponses = new[] { fixture.Create<HttpResponseMessage>(), fixture.Create<HttpResponseMessage>() };
-		var cannedActions = cannedResponses.Select(x => new Func<HttpRequestMessage, HttpResponseMessage>((request) => x)).ToArray();
+		var cannedActions = cannedResponses
+			.Select(cannedResponse =>
+				new Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>
+				(
+					async (request, cancellationToken) => cannedResponse
+				))
+			.ToArray();
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(cannedActions);
 
@@ -36,7 +42,13 @@ public class ShortCircuitingCannedActionsHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var cannedResponses = new[] { fixture.Create<HttpResponseMessage>() };
-		var cannedActions = cannedResponses.Select(x => new Func<HttpRequestMessage, HttpResponseMessage>((request) => x)).ToArray();
+		var cannedActions = cannedResponses
+			.Select(cannedResponse =>
+				new Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>
+				(
+					async (request, cancellationToken) => cannedResponse
+				))
+			.ToArray();
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(cannedActions);
 

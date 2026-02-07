@@ -11,32 +11,56 @@ namespace rm.DelegatingHandlers;
 /// <remarks>
 /// Canned action's response could be disposed as it's not meant for multiuse.
 /// </remarks>
-public class ShortCircuitingCannedActionsHandler : DelegatingHandler
+public class ShortCircuitingCannedActionsHandler : DelegatingHandler, IDisposable
 {
-	private readonly Func<HttpRequestMessage, HttpResponseMessage>[] actions;
+	private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>[] actions;
 	private int iActions = 0;
 
-	private readonly object locker = new object();
+	private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
 	/// <inheritdoc cref="ShortCircuitingCannedActionsHandler" />
 	public ShortCircuitingCannedActionsHandler(
-		params Func<HttpRequestMessage, HttpResponseMessage>[] actions)
+		params Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>[] actions)
 	{
 		this.actions = actions
 			?? throw new ArgumentNullException(nameof(actions));
 	}
 
-	protected override Task<HttpResponseMessage> SendAsync(
+	protected override async Task<HttpResponseMessage> SendAsync(
 		HttpRequestMessage request,
 		CancellationToken cancellationToken)
 	{
-		lock (locker)
+		await semaphoreSlim.WaitAsync();
+		try
 		{
 			if (iActions < actions.Length)
 			{
-				return Task.FromResult(actions[iActions++](request));
+				return await actions[iActions++](request, cancellationToken)
+					.ConfigureAwait(false);
 			}
-			return base.SendAsync(request, cancellationToken);
 		}
+		finally
+		{
+			semaphoreSlim.Release();
+		}
+		return await base.SendAsync(request, cancellationToken)
+			.ConfigureAwait(false);
+	}
+
+	private bool disposed = false;
+
+	protected override void Dispose(bool disposing)
+	{
+		if (!disposed)
+		{
+			if (disposing)
+			{
+				semaphoreSlim?.Dispose();
+
+				disposed = true;
+			}
+		}
+
+		base.Dispose(disposing);
 	}
 }

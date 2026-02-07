@@ -16,10 +16,10 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
-			(request) => throw new TaskCanceledException("timeout!"),                    // retry
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }  // NO retry
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"),                    // retry
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 }  // NO retry
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -53,12 +53,12 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!")  // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!")  // retry
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -92,12 +92,12 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!"), // retry
-			(request) => throw new TaskCanceledException("timeout!")  // last attempt
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 }, // retry
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") }, // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!"), // retry
+			async (request, cancellationToken) => throw new TaskCanceledException("timeout!")  // last attempt
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -133,7 +133,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => throw new TurnDownForWhatException()         // unhandled
+			async (request, cancellationToken) => throw new TurnDownForWhatException()         // unhandled
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -167,7 +167,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 } // NO retry
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 } // NO retry
 			);
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryAttempt = -1;
@@ -199,7 +199,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 });
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 });
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryHandler = new ExponentialBackoffWithJitterRetryOnSignalHandler(
 			new RetrySettings
@@ -227,9 +227,9 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
 		var shortCircuitingCannedActionsHandler = new ShortCircuitingCannedActionsHandler(
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 },
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") },
-			(request) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 });
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)404 },
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200, Content = new StringContent("yawn!") },
+			async (request, cancellationToken) => new HttpResponseMessage() { StatusCode = (HttpStatusCode)200 });
 		var retrySignalingOnConditionHandler = new RetrySignalingOnConditionHandler();
 		var retryHandler = new ExponentialBackoffWithJitterRetryOnSignalHandler(
 			new RetrySettings
