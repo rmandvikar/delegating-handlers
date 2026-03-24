@@ -13,7 +13,7 @@
     <PackageVersion Include="Microsoft.Extensions.Primitives" Version="2.1.6" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="Moq" Version="4.18.4" />
-    <PackageVersion Include="NUnit" Version="3.14.0" />
+    <PackageVersion Include="NUnit" Version="4.5.1" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageVersion Include="Polly" Version="7.2.2" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
