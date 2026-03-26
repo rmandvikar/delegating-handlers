@@ -16,7 +16,14 @@ updates:
     #    update-types:
     #      - "minor"
     #      - "patch"
-    #ignore:
-    #  - dependency-name: "*"
-    #    update-types:
-    #      - "version-update:semver-major"
+    ignore:
+      #- dependency-name: "*"
+      #  update-types:
+      #    - "version-update:semver-major"
+      - dependency-name: "Moq"
+        versions:
+          - "> 4.18.4"
+      - dependency-name: "AutoFixture.AutoMoq"
+      - dependency-name: "FluentAssertions"
+        versions:
+          - ">= 8.0.0"
