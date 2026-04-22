@@ -28,6 +28,6 @@
     <PackageVersion Include="Serilog.Sinks.InMemory.Assertions" Version="0.11.0" />
     <PackageVersion Include="Serilog.Sinks.TextWriter" Version="3.0.0" />
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
-    <PackageVersion Include="System.Net.Http.WinHttpHandler" Version="10.0.6" />
+    <PackageVersion Include="System.Net.Http.WinHttpHandler" Version="10.0.7" />
   </ItemGroup>
 </Project>
