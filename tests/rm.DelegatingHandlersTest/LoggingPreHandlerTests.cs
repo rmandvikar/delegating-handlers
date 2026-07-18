@@ -19,7 +19,8 @@ public class LoggingPreHandlerTests
 	public class Formatter
 	{
 		[Test]
-		public async Task Logs_Request()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -27,7 +28,6 @@ public class LoggingPreHandlerTests
 				.WriteTo.Console(new JsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;
@@ -83,7 +83,8 @@ public class LoggingPreHandlerTests
 	public class CompactFormatter
 	{
 		[Test]
-		public async Task Logs_Request_Compact()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request_Compact(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -91,7 +92,6 @@ public class LoggingPreHandlerTests
 				.WriteTo.Console(new CompactJsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
 			var encoding = Encoding.UTF8;

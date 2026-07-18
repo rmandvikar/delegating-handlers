@@ -27,7 +27,8 @@ public class LoggingPostHandlerTests
 	public class Formatter
 	{
 		[Test]
-		public async Task Logs_Request_Response()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request_Response(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -35,7 +36,6 @@ public class LoggingPostHandlerTests
 				.WriteTo.Console(new JsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
@@ -129,7 +129,8 @@ public class LoggingPostHandlerTests
 		}
 
 		[Test]
-		public async Task Logs_Request_Exception()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request_Exception(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -137,7 +138,6 @@ public class LoggingPostHandlerTests
 				.WriteTo.Console(new JsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
@@ -206,7 +206,8 @@ public class LoggingPostHandlerTests
 	public class CompactFormatter
 	{
 		[Test]
-		public async Task Logs_Request_Response_Compact()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request_Response_Compact(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -214,7 +215,6 @@ public class LoggingPostHandlerTests
 				.WriteTo.Console(new CompactJsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
@@ -308,7 +308,8 @@ public class LoggingPostHandlerTests
 		}
 
 		[Test]
-		public async Task Logs_Request_Exception_Compact()
+		[TestCaseSource(typeof(HttpMethodItems), nameof(HttpMethodItems.HttpMethods))]
+		public async Task Logs_Request_Exception_Compact(HttpMethod method)
 		{
 			var logger = new LoggerConfiguration()
 				.MinimumLevel.Verbose()
@@ -316,7 +317,6 @@ public class LoggingPostHandlerTests
 				.WriteTo.Console(new CompactJsonFormatter())
 				.CreateLogger();
 			var version = "2.0";
-			var method = HttpMethod.Post;
 			var uri = "/health";
 			var statusCode = HttpStatusCode.OK;
 			var requestContent = "{'k':'woot?!'}".Replace("'", "\"");
