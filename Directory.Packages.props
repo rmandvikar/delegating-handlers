@@ -20,7 +20,7 @@
     <PackageVersion Include="rm.Clock" Version="1.1.0" />
     <PackageVersion Include="rm.Extensions" Version="2.8.2" />
     <PackageVersion Include="rm.FeatureToggle" Version="1.1.2" />
-    <PackageVersion Include="rm.Random2" Version="3.0.5" />
+    <PackageVersion Include="rm.Random2" Version="3.1.1" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
