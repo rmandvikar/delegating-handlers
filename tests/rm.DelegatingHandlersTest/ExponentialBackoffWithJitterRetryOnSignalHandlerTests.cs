@@ -87,7 +87,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 	}
 
 	[Test]
-	public void Retries_On_Signal_Last_Attempt_In_Exception()
+	public async Task Retries_On_Signal_Last_Attempt_In_Exception()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
@@ -118,7 +118,7 @@ public class ExponentialBackoffWithJitterRetryOnSignalHandlerTests
 			retryHandler, delegateHandler, retrySignalingOnConditionHandler, shortCircuitingCannedActionsHandler);
 
 		using var requestMessage = fixture.Create<HttpRequestMessage>();
-		Assert.ThrowsAsync<TaskCanceledException>(async () =>
+		await Assert.ThrowsAsync<TaskCanceledException>(async () =>
 		{
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 		});

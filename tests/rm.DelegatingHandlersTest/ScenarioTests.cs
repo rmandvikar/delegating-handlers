@@ -15,7 +15,7 @@ public class ScenarioTests
 	private static readonly Random rng = RandomFactory.GetThreadStaticRandom();
 
 	[Test]
-	public void Retry_To_Fix_Infrequent_TaskCanceledException_Using_HttpMessageInvoker()
+	public async Task Retry_To_Fix_Infrequent_TaskCanceledException_Using_HttpMessageInvoker()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
@@ -50,7 +50,7 @@ public class ScenarioTests
 			retryHandler, timeoutHandler, delegateHandler, procrastinatingHandler);
 
 		using var requestMessage = fixture.Create<HttpRequestMessage>();
-		var ex = Assert.ThrowsAsync<TimeoutExpiredException>(async () =>
+		var ex = await Assert.ThrowsAsync<TimeoutExpiredException>(async () =>
 		{
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 		});
