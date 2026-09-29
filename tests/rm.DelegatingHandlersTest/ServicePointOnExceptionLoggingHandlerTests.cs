@@ -34,7 +34,7 @@ public class ServicePointOnExceptionLoggingHandlerTests
 	}
 
 	[Test]
-	public void Logs_ServicePoint_Stats_During_Exception()
+	public async Task Logs_ServicePoint_Stats_During_Exception()
 	{
 		var fixture = new Fixture().Customize(new AutoMoqCustomization());
 
@@ -48,7 +48,7 @@ public class ServicePointOnExceptionLoggingHandlerTests
 			fixture.Create<HttpMessageHandler>(), servicePointOnExceptionLoggingHandler, throwingHandler);
 
 		using var requestMessage = fixture.Create<HttpRequestMessage>();
-		var ex = Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
+		var ex = await Assert.ThrowsAsync<TurnDownForWhatException>(async () =>
 		{
 			using var _ = await invoker.SendAsync(requestMessage, CancellationToken.None);
 		});
